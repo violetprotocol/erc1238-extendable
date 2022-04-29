@@ -24,6 +24,7 @@
     "@types/node": "^17.0.23",
     "@typescript-eslint/eslint-plugin": "^5.17.0",
     "@typescript-eslint/parser": "^5.17.0",
+    "@violetprotocol/extendable": "^1.1.0",
     "chai": "^4.3.6",
     "commitizen": "^4.2.4",
     "cross-env": "^7.0.3",
