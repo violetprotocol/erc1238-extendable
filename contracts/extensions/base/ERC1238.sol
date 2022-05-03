@@ -9,13 +9,11 @@ contract ERC1238 is Extendable {
     constructor(
         string memory baseURI_,
         address extendLogic,
-        address approveLogic,
         address getterLogic
     ) Extendable(extendLogic) {
         ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
         erc1238Storage.baseURI = baseURI_;
 
-        IExtendLogic(address(this)).extend(approveLogic);
         IExtendLogic(address(this)).extend(getterLogic);
     }
 }

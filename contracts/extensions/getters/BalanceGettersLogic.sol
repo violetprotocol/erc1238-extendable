@@ -1,14 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@violetprotocol/extendable/extensions/InternalExtension.sol";
+import "@violetprotocol/extendable/extensions/Extension.sol";
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./IBalanceGettersLogic.sol";
-import "../../utils/AddressMinimal.sol";
 
-contract BalanceGettersLogic is IBalanceGettersLogic, InternalExtension {
-    using Address for address;
-
+contract BalanceGettersLogic is IBalanceGettersLogic, Extension {
     /**
      * @dev See {IERC1238-balanceOf}.
      *
