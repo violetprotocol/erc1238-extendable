@@ -14,7 +14,7 @@ import {
   IMintBaseLogic,
   MintLogic,
 } from "../../src/types";
-import { getMintApprovalSignature } from "../../src/utils/ERC1238Approval";
+import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
 
 describe("Badge - Minting", function () {
   let admin: SignerWithAddress;
@@ -24,7 +24,6 @@ describe("Badge - Minting", function () {
   let badgeIBalance: IBalanceGettersLogic;
   let badgeMint: MintLogic;
   let badgeIMintBaseLogic: IMintBaseLogic;
-  let mintLogicAddress: string;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -47,8 +46,6 @@ describe("Badge - Minting", function () {
 
     const MintLogicArtifact: Artifact = await artifacts.readArtifact("MintLogic");
     this.mintLogic = <MintLogic>await waffle.deployContract(admin, MintLogicArtifact);
-    mintLogicAddress = this.mintLogic.address;
-    console.log("mintLogicAddress", mintLogicAddress);
   });
 
   beforeEach(async function () {
@@ -67,7 +64,6 @@ describe("Badge - Minting", function () {
 
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
     badgeMint = await ethers.getContractAt("MintLogic", badge.address);
-    // badgeMint = badge as MintLogic;
 
     badgeIMintBaseLogic = await ethers.getContractAt("IMintBaseLogic", badge.address);
   });
@@ -78,8 +74,8 @@ describe("Badge - Minting", function () {
     const tokenId = toBn("11223344");
     const mintAmount = toBn("58319");
 
-    // const tokenBatchIds = [toBn("2000"), toBn("2010"), toBn("2020")];
-    // const mintBatchAmounts = [toBn("5000"), toBn("10000"), toBn("42195")];
+    const tokenBatchIds = [toBn("2000"), toBn("2010"), toBn("2020")];
+    const mintBatchAmounts = [toBn("5000"), toBn("10000"), toBn("42195")];
 
     /*
      * MINTING
@@ -146,96 +142,92 @@ describe("Badge - Minting", function () {
       });
     });
 
-    // describe("_mintBatchToEOA", () => {
-    //   let v: number;
-    //   let r: string;
-    //   let s: string;
+    describe("mintBatchToEOA", () => {
+      let v: number;
+      let r: string;
+      let s: string;
 
-    //   beforeEach(async () => {
-    //     ({ v, r, s } = await getMintBatchApprovalSignature({
-    //       signer: tokenBatchRecipient,
-    //       erc1238ContractAddress: erc1238Mock.address,
-    //       chainId,
-    //       ids: tokenBatchIds,
-    //       amounts: mintBatchAmounts,
-    //     }));
-    //   });
+      beforeEach(async () => {
+        ({ v, r, s } = await getMintBatchApprovalSignature({
+          signer: eoaRecipient1,
+          erc1238ContractAddress: badgeMint.address,
+          chainId: chainIds.hardhat,
+          ids: tokenBatchIds,
+          amounts: mintBatchAmounts,
+        }));
+      });
 
-    //   it("should revert with an invalid signature", async () => {
-    //     await expect(
-    //       erc1238Mock.connect(admin).mintBatchToEOA(ZERO_ADDRESS, tokenBatchIds, mintBatchAmounts, v, r, s, data),
-    //     ).to.be.revertedWith("ERC1238: Approval verification failed");
-    //   });
+      it("should revert with an invalid signature", async () => {
+        await expect(
+          badgeMint
+            .connect(admin)
+            .mintBatchToEOA(ethers.constants.AddressZero, tokenBatchIds, mintBatchAmounts, v, r, s, data),
+        ).to.be.revertedWith("ERC1238: Approval verification failed");
+      });
 
-    //   it("should revert if the length of inputs do not match", async () => {
-    //     ({ v, r, s } = await getMintBatchApprovalSignature({
-    //       signer: tokenBatchRecipient,
-    //       erc1238ContractAddress: erc1238Mock.address,
-    //       chainId,
-    //       ids: tokenBatchIds.slice(1),
-    //       amounts: mintBatchAmounts,
-    //     }));
+      it("should revert if the length of inputs do not match", async () => {
+        ({ v, r, s } = await getMintBatchApprovalSignature({
+          signer: eoaRecipient1,
+          erc1238ContractAddress: badgeMint.address,
+          chainId: chainIds.hardhat,
+          ids: tokenBatchIds.slice(1),
+          amounts: mintBatchAmounts,
+        }));
 
-    //     await expect(
-    //       erc1238Mock
-    //         .connect(admin)
-    //         .mintBatchToEOA(tokenBatchRecipient.address, tokenBatchIds.slice(1), mintBatchAmounts, v, r, s, data),
-    //     ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
-    //   });
+        await expect(
+          badgeMint
+            .connect(admin)
+            .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds.slice(1), mintBatchAmounts, v, r, s, data),
+        ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
+      });
 
-    //   it("should credit the minted tokens", async () => {
-    //     await erc1238Mock
-    //       .connect(admin)
-    //       .mintBatchToEOA(tokenBatchRecipient.address, tokenBatchIds, mintBatchAmounts, v, r, s, data);
+      it("should credit the minted tokens", async () => {
+        await badgeMint
+          .connect(admin)
+          .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, data);
 
-    //     tokenBatchIds.forEach(async (tokenId, index) =>
-    //       expect(await badgeIBalance.balanceOf(tokenBatchRecipient.address, tokenId)).to.eq(mintBatchAmounts[index]),
-    //     );
-    //   });
+        tokenBatchIds.forEach(async (tokenId, index) =>
+          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, tokenId)).to.eq(mintBatchAmounts[index]),
+        );
+      });
 
-    //   it("should emit a MintBatch event", async () => {
-    //     await expect(
-    //       badgeMint.mintBatchToEOA(tokenBatchRecipient.address, tokenBatchIds, mintBatchAmounts, v, r, s, data),
-    //     )
-    //       .to.emit(erc1238Mock, "MintBatch")
-    //       .withArgs(admin.address, tokenBatchRecipient.address, tokenBatchIds, mintBatchAmounts);
-    //   });
-    // });
+      it("should emit a MintBatch event", async () => {
+        await expect(badgeMint.mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, data))
+          .to.emit(badgeMint, "MintBatch")
+          .withArgs(admin.address, eoaRecipient1.address, tokenBatchIds, mintBatchAmounts);
+      });
+    });
 
-    // describe("_mintBatchToContract", () => {
-    //   it("should revert if the length of inputs do not match", async () => {
-    //     await expect(
-    //       erc1238Mock
-    //         .connect(admin)
-    //         .mintBatchToContract(smartContractRecipient1.address, tokenBatchIds.slice(1), mintBatchAmounts, data),
-    //     ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
-    //   });
+    describe("mintBatchToContract", () => {
+      it("should revert if the length of inputs do not match", async () => {
+        await expect(
+          badgeMint
+            .connect(admin)
+            .mintBatchToContract(contractRecipient.address, tokenBatchIds.slice(1), mintBatchAmounts, data),
+        ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
+      });
 
-    //   it("should revert if the recipient is not a contract", async () => {
-    //     await expect(
-    //       badgeMint.mintBatchToContract(tokenRecipient.address, tokenBatchIds, mintBatchAmounts, data),
-    //     ).to.be.revertedWith("ERC1238: Recipient is not a contract");
-    //   });
+      it("should revert if the recipient is not a contract", async () => {
+        await expect(
+          badgeMint.mintBatchToContract(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, data),
+        ).to.be.revertedWith("ERC1238: Recipient is not a contract");
+      });
 
-    //   it("should credit the minted tokens", async () => {
-    //     await erc1238Mock
-    //       .connect(admin)
-    //       .mintBatchToContract(smartContractRecipient1.address, tokenBatchIds, mintBatchAmounts, data);
+      it("should credit the minted tokens", async () => {
+        await badgeMint
+          .connect(admin)
+          .mintBatchToContract(contractRecipient.address, tokenBatchIds, mintBatchAmounts, data);
 
-    //     tokenBatchIds.forEach(async (tokenId, index) =>
-    //       expect(await badgeIBalance.balanceOf(smartContractRecipient1.address, tokenId)).to.eq(
-    //         mintBatchAmounts[index],
-    //       ),
-    //     );
-    //   });
+        tokenBatchIds.forEach(async (tokenId, index) =>
+          expect(await badgeIBalance.balanceOf(contractRecipient.address, tokenId)).to.eq(mintBatchAmounts[index]),
+        );
+      });
 
-    //   it("should emit a MintBatch event", async () => {
-    //     await expect(
-    //       badgeMint.mintBatchToContract(smartContractRecipient1.address, tokenBatchIds, mintBatchAmounts, data),
-    //     )
-    //       .to.emit(erc1238Mock, "MintBatch")
-    //       .withArgs(admin.address, smartContractRecipient1.address, tokenBatchIds, mintBatchAmounts);
-    //   });
-    // });
+      it("should emit a MintBatch event", async () => {
+        await expect(badgeMint.mintBatchToContract(contractRecipient.address, tokenBatchIds, mintBatchAmounts, data))
+          .to.emit(badgeMint, "MintBatch")
+          .withArgs(admin.address, contractRecipient.address, tokenBatchIds, mintBatchAmounts);
+      });
+    });
   });
 });

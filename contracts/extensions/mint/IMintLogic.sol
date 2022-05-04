@@ -21,6 +21,23 @@ interface IMintLogic {
         bytes memory data
     ) external;
 
+    function mintBatchToEOA(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        bytes memory data
+    ) external;
+
+    function mintBatchToContract(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) external;
+
     function mintBundle(
         address[] memory to,
         uint256[][] memory ids,

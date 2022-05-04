@@ -6,7 +6,7 @@ import "../../utils/AddressMinimal.sol";
 import "./MintBaseLogic.sol";
 import "./IMintLogic.sol";
 
-// TODO: Update with permissions.
+// TODO: Update with permissions & URIs
 contract MintLogic is Extension, IMintLogic, MintBaseLogic {
     using Address for address;
 
@@ -33,6 +33,27 @@ contract MintLogic is Extension, IMintLogic, MintBaseLogic {
     ) external override {
         _mintToContract(to, id, amount, data);
         // _setTokenURI(id, uri);
+    }
+
+    function mintBatchToEOA(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        bytes memory data
+    ) external override {
+        _mintBatchToEOA(to, ids, amounts, v, r, s, data);
+    }
+
+    function mintBatchToContract(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) external override {
+        _mintBatchToContract(to, ids, amounts, data);
     }
 
     function mintBundle(
