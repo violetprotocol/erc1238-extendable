@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumberish, ethers, Signature } from "ethers";
+import { BigNumberish, Signature, ethers } from "ethers";
 
 // Must match the domain of ERC1238Approval.sol
 const getDomain = (chainId: number, verifyingContract: string) => ({

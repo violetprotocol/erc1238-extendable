@@ -72,16 +72,6 @@ describe("Badge - Minting", function () {
     badgeIMintBaseLogic = await ethers.getContractAt("IMintBaseLogic", badge.address);
   });
 
-  describe("Interfaces", () => {
-    it("should have all the functions", async () => {
-      const badgeExtendLogic = await ethers.getContractAt("ExtendLogic", badge.address);
-
-      const extensionAddresses = await badgeExtendLogic.getExtensionAddresses();
-      console.log("extensionAddresses", extensionAddresses);
-      expect(true).to.be.false;
-    });
-  });
-
   describe("Minting", () => {
     const tokenURI = "tokenURI";
     const data = "0x12345678";
@@ -103,7 +93,7 @@ describe("Badge - Minting", function () {
       beforeEach(async () => {
         ({ v, r, s } = await getMintApprovalSignature({
           signer: eoaRecipient1,
-          erc1238ContractAddress: mintLogicAddress.toLowerCase(),
+          erc1238ContractAddress: badge.address.toLowerCase(),
           chainId: chainIds.hardhat,
           id: tokenId,
           amount: mintAmount,

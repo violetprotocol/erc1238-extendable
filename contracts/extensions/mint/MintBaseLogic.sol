@@ -1,5 +1,7 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.13;
+
+import "hardhat/console.sol";
 
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./ERC1238Approval.sol";
@@ -8,7 +10,7 @@ import "../hooks/IBeforeMintLogic.sol";
 import "./IMintBaseLogic.sol";
 import "../../utils/AddressMinimal.sol";
 
-abstract contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
+contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
     using Address for address;
 
     /**
@@ -55,6 +57,7 @@ abstract contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
         bytes memory data
     ) internal virtual {
         bytes32 messageHash = _getMintApprovalMessageHash(to, id, amount);
+
         _verifyMintingApproval(to, messageHash, v, r, s);
 
         _mint(to, id, amount, data);

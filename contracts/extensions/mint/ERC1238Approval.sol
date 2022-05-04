@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
-import "hardhat/console.sol";
+import { ERC1238ApprovalState, ERC1238ApprovalStorage } from "../../storage/ERC1238ApprovalStorage.sol";
 
 struct EIP712Domain {
     string name;
@@ -48,10 +48,7 @@ contract ERC1238Approval {
     bytes32 private constant MINT_BATCH_APPROVAL_TYPEHASH =
         keccak256("MintBatchApproval(address recipient,uint256[] ids,uint256[] amounts)");
 
-    // Domain Separator, as defined by EIP-712 (`hashstruct(eip712Domain)`)
-    bytes32 public DOMAIN_SEPARATOR;
-
-    constructor() {
+    function getDomainSeparator() public view returns (bytes32) {
         // The EIP712Domain shares the same name for all ERC128Approval contracts
         // but the unique address of this contract as `verifiyingContract`
         EIP712Domain memory eip712Domain = EIP712Domain({
@@ -60,9 +57,9 @@ contract ERC1238Approval {
             chainId: block.chainid,
             verifyingContract: address(this)
         });
-        console.log("address(this): %s", address(this));
 
-        DOMAIN_SEPARATOR = keccak256(
+        // Domain Separator, as defined by EIP-712 (`hashstruct(eip712Domain)`)
+        bytes32 DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 EIP712DOMAIN_TYPEHASH,
                 keccak256(bytes(eip712Domain.name)),
@@ -71,6 +68,8 @@ contract ERC1238Approval {
                 eip712Domain.verifyingContract
             )
         );
+
+        return DOMAIN_SEPARATOR;
     }
 
     /**
@@ -129,7 +128,11 @@ contract ERC1238Approval {
         bytes32 r,
         bytes32 s
     ) internal view {
-        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, mintApprovalHash));
+        ERC1238ApprovalState storage erc1238ApprovalStorage = ERC1238ApprovalStorage._getStorage();
+
+        bytes32 digest = keccak256(
+            abi.encodePacked("\x19\x01", erc1238ApprovalStorage.domainTypeHash, mintApprovalHash)
+        );
 
         require(ecrecover(digest, v, r, s) == recipient, "ERC1238: Approval verification failed");
     }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { IBeforeMintLogic } from "./IBeforeMintLogic.sol";

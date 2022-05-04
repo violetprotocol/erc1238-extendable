@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
