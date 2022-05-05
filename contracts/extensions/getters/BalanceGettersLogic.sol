@@ -14,7 +14,6 @@ contract BalanceGettersLogic is IBalanceGettersLogic, Extension {
      * - `account` cannot be the zero address.
      */
     function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
-        require(account != address(0), "ERC1238: balance query for the zero address");
         ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
 
         return erc1238Storage._balances[id][account];
