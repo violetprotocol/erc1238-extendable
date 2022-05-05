@@ -25,13 +25,16 @@ contract Badge is Extendable {
             abi.encodeWithSignature("extend(address)", beforeMintLogic)
         );
 
-        (bool success, bytes memory data) = mintLogic.delegatecall(abi.encodeWithSignature("getDomainSeparator()"));
+        if (!balanceExtendSuccess || !mintExtendSuccess || !beforeMintExtendSuccess) {
+            revert("Failed to extend with all extensions");
+        }
+
+        (bool getDomainSeparatorSuccess, bytes memory data) = mintLogic.delegatecall(
+            abi.encodeWithSignature("getDomainSeparator()")
+        );
+        require(getDomainSeparatorSuccess, "Failed to get the domain separator");
 
         ERC1238ApprovalState storage erc1238ApprovalStorage = ERC1238ApprovalStorage._getStorage();
         erc1238ApprovalStorage.domainTypeHash = bytes32(data);
-
-        if (!balanceExtendSuccess || !mintExtendSuccess || !beforeMintExtendSuccess) {
-            revert("Fail to extend with all extensions");
-        }
     }
 }
