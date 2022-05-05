@@ -10,7 +10,7 @@ interface IBaseURILogic {
      * Clients calling this function must replace the `\{id\}` substring with the
      * actual token type ID.
      */
-    function _baseURI() external returns (string memory);
+    function _baseURI() external view returns (string memory);
 
     /**
      * @dev Sets a new URI for all token types, by relying on the token type ID
