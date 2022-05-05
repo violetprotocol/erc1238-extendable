@@ -12,7 +12,10 @@ contract Badge is Extendable {
         address extendLogic,
         address balanceGettersLogic,
         address beforeMintLogic,
-        address mintLogic
+        address mintLogic,
+        address beforeBurnLogic,
+        address burnLogic,
+        address tokenURILogic
     ) Extendable(extendLogic) {
         ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
         erc1238Storage.baseURI = baseURI_;
@@ -24,8 +27,22 @@ contract Badge is Extendable {
         (bool beforeMintExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", beforeMintLogic)
         );
+        (bool beforeBurnExtendSuccess, ) = extendLogic.delegatecall(
+            abi.encodeWithSignature("extend(address)", beforeBurnLogic)
+        );
+        (bool burnExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", burnLogic));
+        (bool tokenURIExtendSuccess, ) = extendLogic.delegatecall(
+            abi.encodeWithSignature("extend(address)", tokenURILogic)
+        );
 
-        if (!balanceExtendSuccess || !mintExtendSuccess || !beforeMintExtendSuccess) {
+        if (
+            !balanceExtendSuccess ||
+            !mintExtendSuccess ||
+            !beforeMintExtendSuccess ||
+            !beforeBurnExtendSuccess ||
+            !burnExtendSuccess ||
+            !tokenURIExtendSuccess
+        ) {
             revert("Failed to extend with all extensions");
         }
 

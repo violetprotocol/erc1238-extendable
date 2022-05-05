@@ -6,16 +6,9 @@ import { artifacts, ethers, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
 
 import { chainIds } from "../../hardhat.config";
-import {
-  Badge,
-  BadgeMintLogic,
-  BalanceGettersLogic,
-  BeforeMintLogic,
-  ERC1238ReceiverMock,
-  IBalanceGettersLogic,
-  IMintBaseLogic,
-} from "../../src/types";
+import { Badge, BadgeMintLogic, ERC1238ReceiverMock, IBalanceGettersLogic, IMintBaseLogic } from "../../src/types";
 import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
+import { BadgeExtensions, makeTestEnv } from "./badgeTestEnvSetup";
 
 const chainId = chainIds.hardhat;
 
@@ -24,6 +17,7 @@ describe("Badge - Minting", function () {
   let eoaRecipient1: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
   let contractRecipient2: ERC1238ReceiverMock;
+  let requiredExtensions: BadgeExtensions;
   let badge: Badge;
   let badgeIBalance: IBalanceGettersLogic;
   let badgeMint: BadgeMintLogic;
@@ -34,41 +28,18 @@ describe("Badge - Minting", function () {
     admin = signers[0];
     eoaRecipient1 = signers[1];
 
-    // Deploy mock contract recipients
-    const ERC1238ReceiverMockArtifact: Artifact = await artifacts.readArtifact("ERC1238ReceiverMock");
-    contractRecipient1 = <ERC1238ReceiverMock>await waffle.deployContract(eoaRecipient1, ERC1238ReceiverMockArtifact);
-    contractRecipient2 = <ERC1238ReceiverMock>await waffle.deployContract(eoaRecipient1, ERC1238ReceiverMockArtifact);
-
-    // Deploy required extensions
-    const ExtendLogicFactory = await ethers.getContractFactory("ExtendLogic");
-    this.extendLogic = await ExtendLogicFactory.deploy();
-
-    const BalanceGettersArtifact: Artifact = await artifacts.readArtifact("BalanceGettersLogic");
-    this.balanceGettersLogic = <BalanceGettersLogic>await waffle.deployContract(admin, BalanceGettersArtifact);
-
-    const BeforeMintArtifact: Artifact = await artifacts.readArtifact("BeforeMintLogic");
-    this.beforeMintLogic = <BeforeMintLogic>await waffle.deployContract(admin, BeforeMintArtifact);
-
-    const BadgeMintLogicArtifact: Artifact = await artifacts.readArtifact("BadgeMintLogic");
-    this.badgeMintLogic = <BadgeMintLogic>await waffle.deployContract(admin, BadgeMintLogicArtifact);
+    ({ contractRecipient1, contractRecipient2, ...requiredExtensions } = await makeTestEnv(admin));
   });
 
   beforeEach(async function () {
     const baseURI: string = "baseURI";
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
-    badge = <Badge>(
-      await waffle.deployContract(admin, badgeArtifact, [
-        baseURI,
-        this.extendLogic.address,
-        this.balanceGettersLogic.address,
-        this.beforeMintLogic.address,
-        this.badgeMintLogic.address,
-      ])
-    );
+    const extensionsAddresses = Object.values(requiredExtensions).map(extension => extension.address);
+    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...extensionsAddresses]);
 
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
-    badgeMint = await ethers.getContractAt("BadgeMintLogic", badge.address);
+    badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
 
     badgeIMintBaseLogic = await ethers.getContractAt("IMintBaseLogic", badge.address);
   });
@@ -289,7 +260,6 @@ describe("Badge - Minting", function () {
         ids = [tokenBatchIds, tokenBatchIds.map(id => id.add(1)), tokenBatchIds.map(id => id.add(2))];
         amounts = [mintBatchAmounts, mintBatchAmounts.map(id => id.add(3)), mintBatchAmounts.map(id => id.add(4))];
       });
-      console.log("contractRecipient1", contractRecipient1);
 
       it("should mint a bundle to multiple addresses", async () => {
         const signatureFromEOA1 = await getMintBatchApprovalSignature({
