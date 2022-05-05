@@ -1,8 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "hardhat/console.sol";
-
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./ERC1238Approval.sol";
 import { IERC1238Receiver } from "../../interfaces/IERC1238Receiver.sol";
