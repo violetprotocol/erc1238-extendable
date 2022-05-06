@@ -3,29 +3,9 @@ pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { ERC1238URIState, ERC1238URIStorage } from "../../storage/ERC1238URIStorage.sol";
-import "./ITokenURILogic.sol";
-import "../base/IBaseURILogic.sol";
+import "./ITokenURISetLogic.sol";
 
-contract TokenURILogic is InternalExtension, ITokenURILogic {
-    /**
-     * @dev See {IERC1238URIStorage-tokenURI}.
-     */
-    function tokenURI(uint256 id) public view virtual override returns (string memory) {
-        ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getStorage();
-
-        string memory _tokenURI = erc1238URIStorage._tokenURIs[id];
-
-        // Returns the token URI if there is a specific one set that overrides the base URI
-        if (_isTokenURISet(id)) {
-            return _tokenURI;
-        }
-
-        IBaseURILogic baseURILogic = IBaseURILogic(address(this));
-        string memory base = baseURILogic._baseURI();
-
-        return base;
-    }
-
+contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
     /**
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
      *
@@ -66,28 +46,21 @@ contract TokenURILogic is InternalExtension, ITokenURILogic {
      *  - The URI can only be deleted if all tokens of type `id` have been burned.
      */
     function _deleteTokenURI(uint256 id) public _internal {
-        if (_isTokenURISet(id)) {
-            ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getStorage();
+        ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getStorage();
 
+        if (bytes(erc1238URIStorage._tokenURIs[id]).length > 0) {
             delete erc1238URIStorage._tokenURIs[id];
         }
     }
 
-    /**
-     * @dev Returns whether a tokenURI is set or not for a specific `id` token type.
-     *
-     */
-    function _isTokenURISet(uint256 id) private view returns (bool) {
-        ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getStorage();
-
-        return bytes(erc1238URIStorage._tokenURIs[id]).length > 0;
-    }
-
     function getInterfaceId() public pure virtual override returns (bytes4) {
-        return (type(ITokenURILogic).interfaceId);
+        return (type(ITokenURISetLogic).interfaceId);
     }
 
     function getInterface() public pure virtual override returns (string memory) {
-        return "function tokenURI(uint256 id) external view returns (string memory);\n";
+        return
+            "function _setTokenURI(uint256 id, string memory _tokenURI) external;\n"
+            "function _setBatchTokenURI(uint256[] memory ids, string[] memory tokenURIs) external;\n"
+            "function _deleteTokenURI(uint256 id) external;\n";
     }
 }

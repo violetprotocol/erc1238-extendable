@@ -10,7 +10,8 @@ import {
   BurnLogic,
   ERC1238ReceiverMock,
   ExtendLogic,
-  TokenURILogic,
+  TokenURIGetLogic,
+  TokenURISetLogic,
 } from "../../src/types";
 
 export type BadgeExtensions = {
@@ -20,7 +21,8 @@ export type BadgeExtensions = {
   badgeMintLogic: BadgeMintLogic;
   beforeBurnLogic: BeforeBurnLogic;
   burnLogic: BurnLogic;
-  tokenURILogic: TokenURILogic;
+  tokenURIGetLogic: TokenURIGetLogic;
+  tokenURISetLogic: TokenURISetLogic;
 };
 
 export type TestEnv = {
@@ -50,7 +52,8 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const badgeMintLogic = <BadgeMintLogic>await await getDeployedContractFromArtifact("BadgeMintLogic");
   const beforeBurnLogic = <BeforeBurnLogic>await await getDeployedContractFromArtifact("BeforeBurnLogic");
   const burnLogic = <BurnLogic>await await getDeployedContractFromArtifact("BurnLogic");
-  const tokenURILogic = <TokenURILogic>await await getDeployedContractFromArtifact("TokenURILogic");
+  const tokenURIGetLogic = <TokenURIGetLogic>await await getDeployedContractFromArtifact("TokenURIGetLogic");
+  const tokenURISetLogic = <TokenURISetLogic>await await getDeployedContractFromArtifact("TokenURISetLogic");
 
   return {
     contractRecipient1,
@@ -61,6 +64,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
     badgeMintLogic,
     beforeBurnLogic,
     burnLogic,
-    tokenURILogic,
+    tokenURIGetLogic,
+    tokenURISetLogic,
   };
 };
