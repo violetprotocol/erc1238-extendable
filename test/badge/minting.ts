@@ -130,7 +130,7 @@ describe("Badge - Minting", function () {
         expect(URI).to.eq(baseURI);
       });
 
-      it("should not change the token URI if none is passed", async () => {
+      it("should not override the token URI if none is passed when minting again", async () => {
         // 1st mint we set the URI
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
@@ -283,7 +283,7 @@ describe("Badge - Minting", function () {
         const parsedLogs = receipt.logs.slice(1).map(log => badgeITokenURISetLogic.interface.parseLog(log));
 
         parsedLogs.forEach((log, index) => {
-          // offset by one since the first id in the batch does not set a URI
+          // offset by one since the first id in the batch does not set a URI (tokenBatchURIs[0] = '')
           expect(log.args.id).to.eq(tokenBatchIds[index + 1]);
           expect(log.args.uri).to.eq(tokenBatchURIs[index + 1]);
         });
@@ -360,7 +360,7 @@ describe("Badge - Minting", function () {
         const parsedLogs = receipt.logs.slice(1).map(log => badgeITokenURISetLogic.interface.parseLog(log));
 
         parsedLogs.forEach((log, index) => {
-          // offset by one since the first id in the batch does not set a URI
+          // offset by one since the first id in the batch does not set a URI (tokenBatchURIs[0] = '')
           expect(log.args.id).to.eq(tokenBatchIds[index + 1]);
           expect(log.args.uri).to.eq(tokenBatchURIs[index + 1]);
         });

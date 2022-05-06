@@ -50,12 +50,11 @@ describe("Badge - Burning", function () {
 
     const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
     Object.values(additionalExtensions).forEach(async extension => {
-      const tx = await badgeExtend.extend(extension.address);
+      await badgeExtend.extend(extension.address);
     });
 
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
-
     badgeIBurnBaseLogic = <IBurnBaseLogic>await ethers.getContractAt("IBurnBaseLogic", badge.address);
     badgeBurn = <BurnLogic>await ethers.getContractAt("BurnLogic", badge.address);
   });
@@ -67,9 +66,9 @@ describe("Badge - Burning", function () {
     const burnAmount = toBn("987");
 
     const tokenBatchIds = [toBn("2000"), toBn("2010"), toBn("2020")];
+    const tokenBatchURIs = ["tokenUri1", "tokenUri2", "tokenUri3"];
     const mintBatchAmounts = [toBn("5000"), toBn("10000"), toBn("42195")];
     const burnBatchAmounts = [toBn("5000"), toBn("9001"), toBn("195")];
-    const tokenBatchURIs = ["tokenUri1", "tokenUri2", "tokenUri3"];
 
     /*
      * BURNING
