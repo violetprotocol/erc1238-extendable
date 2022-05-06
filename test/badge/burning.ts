@@ -128,7 +128,7 @@ describe("Badge - Burning", function () {
             contractRecipient1.address,
             tokenBatchIds.slice(1),
             burnBatchAmounts.slice(1),
-            tokenBatchURIs,
+            tokenBatchURIs.slice(1),
             data,
           );
 

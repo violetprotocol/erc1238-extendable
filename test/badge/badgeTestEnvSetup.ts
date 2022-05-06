@@ -49,11 +49,11 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
 
   const balanceGettersLogic = <BalanceGettersLogic>await getDeployedContractFromArtifact("BalanceGettersLogic");
   const beforeMintLogic = <BeforeMintLogic>await getDeployedContractFromArtifact("BeforeMintLogic");
-  const badgeMintLogic = <BadgeMintLogic>await await getDeployedContractFromArtifact("BadgeMintLogic");
-  const beforeBurnLogic = <BeforeBurnLogic>await await getDeployedContractFromArtifact("BeforeBurnLogic");
-  const burnLogic = <BurnLogic>await await getDeployedContractFromArtifact("BurnLogic");
-  const tokenURIGetLogic = <TokenURIGetLogic>await await getDeployedContractFromArtifact("TokenURIGetLogic");
-  const tokenURISetLogic = <TokenURISetLogic>await await getDeployedContractFromArtifact("TokenURISetLogic");
+  const badgeMintLogic = <BadgeMintLogic>await getDeployedContractFromArtifact("BadgeMintLogic");
+  const beforeBurnLogic = <BeforeBurnLogic>await getDeployedContractFromArtifact("BeforeBurnLogic");
+  const burnLogic = <BurnLogic>await getDeployedContractFromArtifact("BurnLogic");
+  const tokenURIGetLogic = <TokenURIGetLogic>await getDeployedContractFromArtifact("TokenURIGetLogic");
+  const tokenURISetLogic = <TokenURISetLogic>await getDeployedContractFromArtifact("TokenURISetLogic");
 
   return {
     contractRecipient1,
