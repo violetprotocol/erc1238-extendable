@@ -5,6 +5,7 @@ import { Artifact } from "hardhat/types";
 import {
   BadgeMintLogic,
   BalanceGettersLogic,
+  BaseURILogic,
   BeforeBurnLogic,
   BeforeMintLogic,
   BurnLogic,
@@ -14,21 +15,29 @@ import {
   TokenURISetLogic,
 } from "../../src/types";
 
-export type BadgeExtensions = {
+export type BadgeBaseExtensions = {
   extendLogic: ExtendLogic;
   balanceGettersLogic: BalanceGettersLogic;
+  baseURILogic: BaseURILogic;
   beforeMintLogic: BeforeMintLogic;
   badgeMintLogic: BadgeMintLogic;
   beforeBurnLogic: BeforeBurnLogic;
   burnLogic: BurnLogic;
+};
+
+export type BadgeAdditionalExtensions = {
   tokenURIGetLogic: TokenURIGetLogic;
   tokenURISetLogic: TokenURISetLogic;
 };
 
 export type TestEnv = {
-  contractRecipient1: ERC1238ReceiverMock;
-  contractRecipient2: ERC1238ReceiverMock;
-} & BadgeExtensions;
+  recipients: {
+    contractRecipient1: ERC1238ReceiverMock;
+    contractRecipient2: ERC1238ReceiverMock;
+  };
+  baseExtensions: BadgeBaseExtensions;
+  additionalExtensions: BadgeAdditionalExtensions;
+};
 
 const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
   const BeforeBurnLogicArtifact: Artifact = await artifacts.readArtifact(artifactName);
@@ -48,6 +57,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const extendLogic = await ExtendLogicFactory.deploy();
 
   const balanceGettersLogic = <BalanceGettersLogic>await getDeployedContractFromArtifact("BalanceGettersLogic");
+  const baseURILogic = <BaseURILogic>await getDeployedContractFromArtifact("BaseURILogic");
   const beforeMintLogic = <BeforeMintLogic>await getDeployedContractFromArtifact("BeforeMintLogic");
   const badgeMintLogic = <BadgeMintLogic>await getDeployedContractFromArtifact("BadgeMintLogic");
   const beforeBurnLogic = <BeforeBurnLogic>await getDeployedContractFromArtifact("BeforeBurnLogic");
@@ -56,15 +66,22 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const tokenURISetLogic = <TokenURISetLogic>await getDeployedContractFromArtifact("TokenURISetLogic");
 
   return {
-    contractRecipient1,
-    contractRecipient2,
-    extendLogic,
-    balanceGettersLogic,
-    beforeMintLogic,
-    badgeMintLogic,
-    beforeBurnLogic,
-    burnLogic,
-    tokenURIGetLogic,
-    tokenURISetLogic,
+    recipients: {
+      contractRecipient1,
+      contractRecipient2,
+    },
+    baseExtensions: {
+      extendLogic,
+      balanceGettersLogic,
+      baseURILogic,
+      beforeMintLogic,
+      badgeMintLogic,
+      beforeBurnLogic,
+      burnLogic,
+    },
+    additionalExtensions: {
+      tokenURIGetLogic,
+      tokenURISetLogic,
+    },
   };
 };

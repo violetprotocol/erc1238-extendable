@@ -3,8 +3,8 @@ pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/Extension.sol";
 import { ERC1238URIState, ERC1238URIStorage } from "../../storage/ERC1238URIStorage.sol";
+import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./ITokenURIGetLogic.sol";
-import "../base/IBaseURILogic.sol";
 
 contract TokenURIGetLogic is Extension, ITokenURIGetLogic {
     /**
@@ -20,10 +20,9 @@ contract TokenURIGetLogic is Extension, ITokenURIGetLogic {
             return _tokenURI;
         }
 
-        IBaseURILogic baseURILogic = IBaseURILogic(address(this));
-        string memory base = baseURILogic._baseURI();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
 
-        return base;
+        return erc1238Storage.baseURI;
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {

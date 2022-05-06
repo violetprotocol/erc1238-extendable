@@ -10,7 +10,18 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
      *
      */
+    // TODO: Add permissions
+    function setTokenURI(uint256 id, string memory _tokenURI) public {
+        _setTokenURI(id, _tokenURI);
+    }
+
+    /**
+     * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
+     *
+     */
     function _setTokenURI(uint256 id, string memory _tokenURI) public _internal {
+        if (bytes(_tokenURI).length == 0) return;
+
         ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getStorage();
         erc1238URIStorage._tokenURIs[id] = _tokenURI;
 
@@ -27,8 +38,10 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
         ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getStorage();
 
         for (uint256 i = 0; i < ids.length; i++) {
-            uint256 id = ids[i];
             string memory uri = tokenURIs[i];
+            if (bytes(uri).length == 0) continue;
+
+            uint256 id = ids[i];
 
             erc1238URIStorage._tokenURIs[id] = uri;
 

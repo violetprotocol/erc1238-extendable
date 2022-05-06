@@ -12,34 +12,46 @@ import {
   IBalanceGettersLogic,
   IBurnBaseLogic,
 } from "../../src/types";
-import { BadgeExtensions, makeTestEnv } from "./badgeTestEnvSetup";
+import { BadgeAdditionalExtensions, BadgeBaseExtensions, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - Burning", function () {
   let admin: SignerWithAddress;
   let eoaRecipient1: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
   let contractRecipient2: ERC1238ReceiverMock;
+
+  let baseExtensions: BadgeBaseExtensions;
+  let additionalExtensions: BadgeAdditionalExtensions;
+
   let badge: Badge;
   let badgeIBalance: IBalanceGettersLogic;
   let badgeMint: BadgeMintLogic;
   let badgeIBurnBaseLogic: IBurnBaseLogic;
   let badgeBurn: BurnLogic;
-  let requiredExtensions: BadgeExtensions;
 
   before(async function () {
     const signers = await ethers.getSigners();
     admin = signers[0];
     eoaRecipient1 = signers[1];
 
-    ({ contractRecipient1, contractRecipient2, ...requiredExtensions } = await makeTestEnv(admin));
+    ({
+      recipients: { contractRecipient1, contractRecipient2 },
+      baseExtensions,
+      additionalExtensions,
+    } = await makeTestEnv(admin));
   });
 
   beforeEach(async function () {
     const baseURI: string = "baseURI";
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
-    const extensionsAddresses = Object.values(requiredExtensions).map(extension => extension.address);
-    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...extensionsAddresses]);
+    const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
+    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...baseExtensionsAddresses]);
+
+    const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
+    Object.values(additionalExtensions).forEach(async extension => {
+      const tx = await badgeExtend.extend(extension.address);
+    });
 
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);

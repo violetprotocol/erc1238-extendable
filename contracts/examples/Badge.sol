@@ -11,12 +11,11 @@ contract Badge is Extendable {
         string memory baseURI_,
         address extendLogic,
         address balanceGettersLogic,
+        address baseURILogic,
         address beforeMintLogic,
         address mintLogic,
         address beforeBurnLogic,
-        address burnLogic,
-        address tokenURIGetLogic,
-        address tokenURISetLogic
+        address burnLogic
     ) Extendable(extendLogic) {
         ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
         erc1238Storage.baseURI = baseURI_;
@@ -24,29 +23,25 @@ contract Badge is Extendable {
         (bool balanceExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", balanceGettersLogic)
         );
-        (bool mintExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", mintLogic));
+        (bool baseURIExendSuccess, ) = extendLogic.delegatecall(
+            abi.encodeWithSignature("extend(address)", baseURILogic)
+        );
         (bool beforeMintExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", beforeMintLogic)
         );
+        (bool mintExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", mintLogic));
         (bool beforeBurnExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", beforeBurnLogic)
         );
         (bool burnExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", burnLogic));
-        (bool tokenURIGetExtendSuccess, ) = extendLogic.delegatecall(
-            abi.encodeWithSignature("extend(address)", tokenURIGetLogic)
-        );
-        (bool tokenURISetExtendSuccess, ) = extendLogic.delegatecall(
-            abi.encodeWithSignature("extend(address)", tokenURISetLogic)
-        );
 
         if (
             !balanceExtendSuccess ||
+            !baseURIExendSuccess ||
             !mintExtendSuccess ||
             !beforeMintExtendSuccess ||
             !beforeBurnExtendSuccess ||
-            !burnExtendSuccess ||
-            !tokenURIGetExtendSuccess ||
-            !tokenURISetExtendSuccess
+            !burnExtendSuccess
         ) {
             revert("Failed to extend with all extensions");
         }

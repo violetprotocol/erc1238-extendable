@@ -16,16 +16,21 @@ import {
   ITokenURISetLogic,
 } from "../../src/types";
 import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
-import { BadgeExtensions, makeTestEnv } from "./badgeTestEnvSetup";
+import { BadgeAdditionalExtensions, BadgeBaseExtensions, makeTestEnv } from "./badgeTestEnvSetup";
 
 const chainId = chainIds.hardhat;
+
+const baseURI: string = "baseURI";
 
 describe("Badge - Minting", function () {
   let admin: SignerWithAddress;
   let eoaRecipient1: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
   let contractRecipient2: ERC1238ReceiverMock;
-  let requiredExtensions: BadgeExtensions;
+
+  let baseExtensions: BadgeBaseExtensions;
+  let additionalExtensions: BadgeAdditionalExtensions;
+
   let badge: Badge;
   let badgeIBalance: IBalanceGettersLogic;
   let badgeMint: BadgeMintLogic;
@@ -38,15 +43,23 @@ describe("Badge - Minting", function () {
     admin = signers[0];
     eoaRecipient1 = signers[1];
 
-    ({ contractRecipient1, contractRecipient2, ...requiredExtensions } = await makeTestEnv(admin));
+    ({
+      recipients: { contractRecipient1, contractRecipient2 },
+      baseExtensions,
+      additionalExtensions,
+    } = await makeTestEnv(admin));
   });
 
   beforeEach(async function () {
-    const baseURI: string = "baseURI";
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
-    const extensionsAddresses = Object.values(requiredExtensions).map(extension => extension.address);
-    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...extensionsAddresses]);
+    const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
+    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...baseExtensionsAddresses]);
+
+    const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
+    Object.values(additionalExtensions).forEach(async extension => {
+      await badgeExtend.extend(extension.address);
+    });
 
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
@@ -63,7 +76,8 @@ describe("Badge - Minting", function () {
 
     const tokenBatchIds = [toBn("2000"), toBn("2010"), toBn("2020")];
     const mintBatchAmounts = [toBn("5000"), toBn("10000"), toBn("42195")];
-    const tokenBatchURIs = ["tokenUri1", "tokenUri2", "tokenUri3"];
+    const tokenBatchURIs = ["", "tokenUri1", "tokenUri2"];
+    const expectedTokenBatchURIs = [baseURI, tokenBatchURIs[1], tokenBatchURIs[2]];
 
     /*
      * MINTING
@@ -106,6 +120,28 @@ describe("Badge - Minting", function () {
         const URI = await badgeITokenURIGetLogic.tokenURI(tokenId);
 
         expect(URI).to.eq(tokenURI);
+      });
+
+      it("should allow to set an empty token URI", async () => {
+        await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, "", data);
+
+        const URI = await badgeITokenURIGetLogic.tokenURI(2);
+
+        expect(URI).to.eq(baseURI);
+      });
+
+      it("should not change the token URI if none is passed", async () => {
+        // 1st mint we set the URI
+        await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
+
+        const URIAfterFirstMint = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        expect(URIAfterFirstMint).to.eq(tokenURI);
+
+        // 2nd mint we pass an empty URI
+        await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, "", data);
+
+        const URIAfterSecondMint = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        expect(URIAfterSecondMint).to.eq(tokenURI);
       });
 
       it("should emit a URI event", async () => {
@@ -234,7 +270,7 @@ describe("Badge - Minting", function () {
           tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
         );
 
-        expect(setURIs).to.eql(tokenBatchURIs);
+        expect(setURIs).to.eql(expectedTokenBatchURIs);
       });
 
       it("should emit URI events", async () => {
@@ -247,8 +283,9 @@ describe("Badge - Minting", function () {
         const parsedLogs = receipt.logs.slice(1).map(log => badgeITokenURISetLogic.interface.parseLog(log));
 
         parsedLogs.forEach((log, index) => {
-          expect(log.args.id).to.eq(tokenBatchIds[index]);
-          expect(log.args.uri).to.eq(tokenBatchURIs[index]);
+          // offset by one since the first id in the batch does not set a URI
+          expect(log.args.id).to.eq(tokenBatchIds[index + 1]);
+          expect(log.args.uri).to.eq(tokenBatchURIs[index + 1]);
         });
       });
 
@@ -310,7 +347,7 @@ describe("Badge - Minting", function () {
           tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
         );
 
-        expect(setURIs).to.eql(tokenBatchURIs);
+        expect(setURIs).to.eql(expectedTokenBatchURIs);
       });
 
       it("should emit URI events", async () => {
@@ -323,8 +360,9 @@ describe("Badge - Minting", function () {
         const parsedLogs = receipt.logs.slice(1).map(log => badgeITokenURISetLogic.interface.parseLog(log));
 
         parsedLogs.forEach((log, index) => {
-          expect(log.args.id).to.eq(tokenBatchIds[index]);
-          expect(log.args.uri).to.eq(tokenBatchURIs[index]);
+          // offset by one since the first id in the batch does not set a URI
+          expect(log.args.id).to.eq(tokenBatchIds[index + 1]);
+          expect(log.args.uri).to.eq(tokenBatchURIs[index + 1]);
         });
       });
 
@@ -348,12 +386,14 @@ describe("Badge - Minting", function () {
       let ids: BigNumber[][];
       let amounts: BigNumber[][];
       let uris: string[][];
+      let expectedUris: string[][];
 
       before(() => {
         to = [eoaRecipient1.address, contractRecipient1.address, contractRecipient2.address];
         ids = [tokenBatchIds, tokenBatchIds.map(id => id.add(1)), tokenBatchIds.map(id => id.add(2))];
         amounts = [mintBatchAmounts, mintBatchAmounts.map(id => id.add(3)), mintBatchAmounts.map(id => id.add(4))];
         uris = [tokenBatchURIs, tokenBatchURIs, tokenBatchURIs];
+        expectedUris = [expectedTokenBatchURIs, expectedTokenBatchURIs, expectedTokenBatchURIs];
       });
 
       it("should mint a bundle to multiple addresses", async () => {
@@ -402,9 +442,9 @@ describe("Badge - Minting", function () {
         const setURIs = await Promise.all(
           ids.flat().map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
         );
-        const flattenedURIs = uris.flat();
+        const expectedFlattenedURIs = expectedUris.flat();
 
-        expect(flattenedURIs).to.eql(setURIs);
+        expect(expectedFlattenedURIs).to.eql(setURIs);
       });
 
       it("should emit MintBatch events", async () => {
@@ -438,15 +478,13 @@ describe("Badge - Minting", function () {
 
         const tx = badgeMint.connect(admin).mintBundle(to, ids, amounts, uris, data);
 
-        await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[0][0], uris[0][0]);
+        // Skip index 0 of each batch as no URI is set
         await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[0][1], uris[0][1]);
         await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[0][2], uris[0][2]);
 
-        await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[1][0], uris[1][0]);
         await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[1][1], uris[1][1]);
         await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[1][2], uris[1][2]);
 
-        await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[2][0], uris[2][0]);
         await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[2][1], uris[2][1]);
         await expect(tx).to.emit(badgeITokenURISetLogic, "URI").withArgs(ids[2][2], uris[2][2]);
       });

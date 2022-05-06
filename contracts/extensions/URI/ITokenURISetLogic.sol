@@ -10,7 +10,13 @@ interface ITokenURISetLogic {
 
     /**
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
-     *
+     * Visibility: Public.
+     */
+    function setTokenURI(uint256 id, string memory _tokenURI) external;
+
+    /**
+     * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
+     * Visibility: Internal.
      */
     function _setTokenURI(uint256 id, string memory _tokenURI) external;
 
