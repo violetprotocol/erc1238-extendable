@@ -41,7 +41,8 @@ export type TestEnv = {
   additionalExtensions: BadgeAdditionalExtensions;
 };
 
-const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
+export const baseURI: string = "baseURI";
+export const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
   const artifact: Artifact = await artifacts.readArtifact(artifactName);
   return await waffle.deployContract(deployer, artifact);
 };

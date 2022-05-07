@@ -16,11 +16,9 @@ import {
   ITokenURISetLogic,
 } from "../../src/types";
 import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
-import { BadgeAdditionalExtensions, BadgeBaseExtensions, makeTestEnv } from "./badgeTestEnvSetup";
+import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
 
 const chainId = chainIds.hardhat;
-
-const baseURI: string = "baseURI";
 
 describe("Badge - Minting", function () {
   let admin: SignerWithAddress;

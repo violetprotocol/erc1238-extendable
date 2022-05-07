@@ -12,7 +12,7 @@ import {
   IBalanceGettersLogic,
   IBurnBaseLogic,
 } from "../../src/types";
-import { BadgeAdditionalExtensions, BadgeBaseExtensions, makeTestEnv } from "./badgeTestEnvSetup";
+import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - Burning", function () {
   let admin: SignerWithAddress;
@@ -42,7 +42,6 @@ describe("Badge - Burning", function () {
   });
 
   beforeEach(async function () {
-    const baseURI: string = "baseURI";
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
