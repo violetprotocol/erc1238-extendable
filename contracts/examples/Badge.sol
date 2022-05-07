@@ -23,28 +23,28 @@ contract Badge is Extendable {
         (bool balanceExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", balanceGettersLogic)
         );
+        require(balanceExtendSuccess, "Failed to extend with balance extension");
+
         (bool baseURIExendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", baseURILogic)
         );
+        require(baseURIExendSuccess, "Failed to extend with baseURI extension");
+
         (bool beforeMintExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", beforeMintLogic)
         );
+        require(beforeMintExtendSuccess, "Failed to extend with beforeMint extension");
+
         (bool mintExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", mintLogic));
+        require(mintExtendSuccess, "Failed to extend with mint extension");
+
         (bool beforeBurnExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", beforeBurnLogic)
         );
-        (bool burnExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", burnLogic));
+        require(beforeBurnExtendSuccess, "Failed to extend with beforeBurn extension");
 
-        if (
-            !balanceExtendSuccess ||
-            !baseURIExendSuccess ||
-            !mintExtendSuccess ||
-            !beforeMintExtendSuccess ||
-            !beforeBurnExtendSuccess ||
-            !burnExtendSuccess
-        ) {
-            revert("Failed to extend with all extensions");
-        }
+        (bool burnExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", burnLogic));
+        require(burnExtendSuccess, "Failed to extend with burn extension");
 
         (bool getDomainSeparatorSuccess, bytes memory data) = mintLogic.delegatecall(
             abi.encodeWithSignature("getDomainSeparator()")
