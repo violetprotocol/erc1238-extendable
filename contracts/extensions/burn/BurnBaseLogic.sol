@@ -59,13 +59,13 @@ contract BurnBaseLogic is IBurnBaseLogic {
 
         IBeforeBurnLogic beforeBurnLogic = IBeforeBurnLogic(address(this));
 
+        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
 
             beforeBurnLogic._beforeBurn(burner, from, id, amount);
-
-            ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
 
             uint256 fromBalance = erc1238Storage._balances[id][from];
             require(fromBalance >= amount, "ERC1238: burn amount exceeds balance");
