@@ -396,7 +396,7 @@ describe("Badge - Collection", function () {
      */
     describe("When burning tokens", () => {
       describe("Burn", () => {
-        describe("baseId", () => {
+        describe("For a contract", () => {
           it("should decrease the base Id balance", async () => {
             const baseId = 999;
             const counter = 42;
@@ -417,48 +417,80 @@ describe("Badge - Collection", function () {
               mintAmount.sub(burnAmount),
             );
           });
+
+          it("should revert when burning more than available balance", async () => {
+            const amountToMint = burnAmount.sub(1);
+            await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
+
+            await expect(
+              badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount),
+            ).to.be.revertedWith("ERC1238: burn amount exceeds base id balance");
+          });
         });
 
-        it("should revert when burning more than available balance", async () => {
-          const amountToMint = burnAmount.sub(1);
-          await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
+        describe("For an EOA", () => {
+          it("should decrease the base Id balance", async () => {
+            const baseId = 999;
+            const counter = 42;
+            const mintAmount = toBn("50");
+            const burnAmount = toBn("25");
 
-          await expect(
-            badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount),
-          ).to.be.revertedWith("ERC1238: burn amount exceeds base id balance");
+            const tokenId = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter);
+            const { v, r, s } = await getMintApprovalSignature({
+              signer: eoaRecipient1,
+              erc1238ContractAddress: badge.address.toLowerCase(),
+              chainId,
+              id: tokenId,
+              amount: mintAmount,
+            });
+
+            await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
+
+            await badgeBurn.burn(eoaRecipient1.address, tokenId, burnAmount);
+
+            expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
+              mintAmount.sub(burnAmount),
+            );
+          });
+
+          it("should revert when burning more than available balance", async () => {
+            await expect(badgeBurn.connect(admin).burn(eoaRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
+              "ERC1238: burn amount exceeds base id balance",
+            );
+          });
         });
       });
 
       describe("Batch burn", () => {
-        before(async () => {
-          // With basedId_1
-          const tokenId_0 = await badgeCollectionLogic.getConstructedTokenID(
-            baseId_1,
-            contractRecipient1.address,
-            counter_0,
-          );
-          const tokenId_1 = await badgeCollectionLogic.getConstructedTokenID(
-            baseId_1,
-            contractRecipient1.address,
-            counter_1,
-          );
+        describe("For a contract", () => {
+          before(async () => {
+            // With basedId_1
+            const tokenId_0 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_1,
+              contractRecipient1.address,
+              counter_0,
+            );
+            const tokenId_1 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_1,
+              contractRecipient1.address,
+              counter_1,
+            );
 
-          // With basedId_2
-          const tokenId_2 = await badgeCollectionLogic.getConstructedTokenID(
-            baseId_2,
-            contractRecipient1.address,
-            counter_0,
-          );
-          const tokenId_3 = await badgeCollectionLogic.getConstructedTokenID(
-            baseId_2,
-            contractRecipient1.address,
-            counter_1,
-          );
+            // With basedId_2
+            const tokenId_2 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_2,
+              contractRecipient1.address,
+              counter_0,
+            );
+            const tokenId_3 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_2,
+              contractRecipient1.address,
+              counter_1,
+            );
 
-          tokenBatchIds = [tokenId_0, tokenId_1, tokenId_2, tokenId_3];
-        });
+            tokenBatchIds = [tokenId_0, tokenId_1, tokenId_2, tokenId_3];
+          });
 
-        describe("baseId", () => {
           it("should properly decrease the baseId balances", async () => {
             await badgeMint
               .connect(admin)
@@ -468,6 +500,62 @@ describe("Badge - Collection", function () {
 
             const baseId1Balance = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_1);
             const baseId2Balance = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_2);
+
+            const remainingAmounts = tokenBatchIds.map((_, index) =>
+              mintBatchAmounts[index].sub(burnBatchAmounts[index]),
+            );
+
+            expect(baseId1Balance).to.eq(remainingAmounts[0].add(remainingAmounts[1]));
+            expect(baseId2Balance).to.eq(remainingAmounts[2].add(remainingAmounts[3]));
+          });
+        });
+
+        describe("For an EOA", () => {
+          before(async () => {
+            // With basedId_1
+            const tokenId_0 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_1,
+              eoaRecipient1.address,
+              counter_0,
+            );
+            const tokenId_1 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_1,
+              eoaRecipient1.address,
+              counter_1,
+            );
+
+            // With basedId_2
+            const tokenId_2 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_2,
+              eoaRecipient1.address,
+              counter_0,
+            );
+            const tokenId_3 = await badgeCollectionLogic.getConstructedTokenID(
+              baseId_2,
+              eoaRecipient1.address,
+              counter_1,
+            );
+
+            tokenBatchIds = [tokenId_0, tokenId_1, tokenId_2, tokenId_3];
+          });
+
+          it("should properly decrease the baseId balances", async () => {
+            const { v, r, s } = await getMintBatchApprovalSignature({
+              signer: eoaRecipient1,
+              erc1238ContractAddress: badgeMint.address,
+              chainId,
+              ids: tokenBatchIds,
+              amounts: mintBatchAmounts,
+            });
+
+            await badgeMint
+              .connect(admin)
+              .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
+
+            await badgeBurn.connect(admin).burnBatch(eoaRecipient1.address, tokenBatchIds, burnBatchAmounts);
+
+            const baseId1Balance = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_1);
+            const baseId2Balance = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_2);
 
             const remainingAmounts = tokenBatchIds.map((_, index) =>
               mintBatchAmounts[index].sub(burnBatchAmounts[index]),
