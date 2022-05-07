@@ -2,6 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { artifacts, ethers, waffle } from "hardhat";
 import { Artifact } from "hardhat/types";
 
+import { chainIds } from "../../hardhat.config";
 import {
   BadgeBeforeBurnLogic,
   BadgeBeforeMintLogic,
@@ -41,6 +42,7 @@ export type TestEnv = {
   additionalExtensions: BadgeAdditionalExtensions;
 };
 
+export const chainId = chainIds.hardhat;
 export const baseURI: string = "baseURI";
 export const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
   const artifact: Artifact = await artifacts.readArtifact(artifactName);

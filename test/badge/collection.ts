@@ -1,6 +1,6 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
-import { BigNumber } from "ethers";
+import { BigNumber, Signature } from "ethers";
 import { toBn } from "evm-bn";
 import { artifacts, ethers, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
@@ -13,10 +13,12 @@ import {
   IBalanceGettersLogic,
   ICollectionLogic,
 } from "../../src/types";
-import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
+import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
+import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, chainId, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - Collection", function () {
   let admin: SignerWithAddress;
+  let eoaRecipient1: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
 
   let baseExtensions: BadgeBaseExtensions;
@@ -31,6 +33,7 @@ describe("Badge - Collection", function () {
   before(async function () {
     const signers = await ethers.getSigners();
     admin = signers[0];
+    eoaRecipient1 = signers[1];
 
     ({
       recipients: { contractRecipient1 },
@@ -77,7 +80,7 @@ describe("Badge - Collection", function () {
      * MINTING
      */
 
-    describe("when minting", () => {
+    describe("when minting to a contract", () => {
       const baseId = 999;
       const counter_0 = 0;
       const counter_1 = 1;
@@ -163,6 +166,159 @@ describe("Badge - Collection", function () {
       });
     });
 
+    describe("when minting to an EOA", () => {
+      const baseId = 999;
+      const counter_0 = 0;
+      const counter_1 = 1;
+
+      describe("Base Id for NFTs", () => {
+        let nftId1: BigNumber;
+        let nftId2: BigNumber;
+        const NFT_AMOUNT = 1;
+        let sigForNFT1: Signature;
+        let sigForNFT2: Signature;
+
+        beforeEach(async () => {
+          nftId1 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_0);
+
+          nftId2 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_1);
+          sigForNFT1 = await getMintApprovalSignature({
+            signer: eoaRecipient1,
+            erc1238ContractAddress: badge.address.toLowerCase(),
+            chainId,
+            id: nftId1,
+            amount: NFT_AMOUNT,
+          });
+
+          sigForNFT2 = await getMintApprovalSignature({
+            signer: eoaRecipient1,
+            erc1238ContractAddress: badge.address.toLowerCase(),
+            chainId,
+            id: nftId2,
+            amount: NFT_AMOUNT,
+          });
+        });
+
+        it("should credit the right balance of tokens from a base id", async () => {
+          await badgeMint.mintToEOA(
+            eoaRecipient1.address,
+            nftId1,
+            NFT_AMOUNT,
+            sigForNFT1.v,
+            sigForNFT1.r,
+            sigForNFT1.s,
+            tokenURI,
+            data,
+          );
+
+          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(NFT_AMOUNT);
+          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, nftId1)).to.eq(NFT_AMOUNT);
+        });
+
+        it("should aggregate balances of different NFTs with the same base id", async () => {
+          await badgeMint.mintToEOA(
+            eoaRecipient1.address,
+            nftId1,
+            NFT_AMOUNT,
+            sigForNFT1.v,
+            sigForNFT1.r,
+            sigForNFT1.s,
+            tokenURI,
+            data,
+          );
+          await badgeMint.mintToEOA(
+            eoaRecipient1.address,
+            nftId2,
+            NFT_AMOUNT,
+            sigForNFT2.v,
+            sigForNFT2.r,
+            sigForNFT2.s,
+            tokenURI,
+            data,
+          );
+
+          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(NFT_AMOUNT * 2);
+          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, nftId1)).to.eq(NFT_AMOUNT);
+          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, nftId2)).to.eq(NFT_AMOUNT);
+        });
+      });
+
+      describe("Base Id for FTs", () => {
+        const FT_AMOUNT_1 = 92837465;
+        const FT_AMOUNT_2 = 123456;
+
+        let ftId1: BigNumber;
+        let ftId2: BigNumber;
+        let sigForFT1: Signature;
+        let sigForFT2: Signature;
+
+        beforeEach(async () => {
+          ftId1 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_0);
+
+          ftId2 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_1);
+          sigForFT1 = await getMintApprovalSignature({
+            signer: eoaRecipient1,
+            erc1238ContractAddress: badge.address,
+            chainId,
+            id: ftId1,
+            amount: FT_AMOUNT_1,
+          });
+
+          sigForFT2 = await getMintApprovalSignature({
+            signer: eoaRecipient1,
+            erc1238ContractAddress: badge.address,
+            chainId,
+            id: ftId2,
+            amount: FT_AMOUNT_2,
+          });
+        });
+        it("should credit the right balance of tokens from a base id", async () => {
+          await badgeMint.mintToEOA(
+            eoaRecipient1.address,
+            ftId1,
+            FT_AMOUNT_1,
+            sigForFT1.v,
+            sigForFT1.r,
+            sigForFT1.s,
+            tokenURI,
+            data,
+          );
+
+          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(FT_AMOUNT_1);
+          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, ftId1)).to.eq(FT_AMOUNT_1);
+        });
+
+        it("should aggregate balances of different FTs with the same base id", async () => {
+          await badgeMint.mintToEOA(
+            eoaRecipient1.address,
+            ftId1,
+            FT_AMOUNT_1,
+            sigForFT1.v,
+            sigForFT1.r,
+            sigForFT1.s,
+            tokenURI,
+            data,
+          );
+          await badgeMint.mintToEOA(
+            eoaRecipient1.address,
+            ftId2,
+            FT_AMOUNT_2,
+            sigForFT2.v,
+            sigForFT2.r,
+            sigForFT2.s,
+            tokenURI,
+            data,
+          );
+
+          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
+            FT_AMOUNT_1 + FT_AMOUNT_2,
+          );
+          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, ftId1)).to.eq(FT_AMOUNT_1);
+          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, ftId2)).to.eq(FT_AMOUNT_2);
+        });
+      });
+    });
+
     describe("When batch minting", () => {
       before(async () => {
         // With basedId_1
@@ -191,7 +347,8 @@ describe("Badge - Collection", function () {
 
         tokenBatchIds = [tokenId_0, tokenId_1, tokenId_2, tokenId_3];
       });
-      describe("Base ID", () => {
+
+      describe("To a contract", () => {
         it("should credit the right base ids", async () => {
           await badgeMint
             .connect(admin)
@@ -199,6 +356,34 @@ describe("Badge - Collection", function () {
 
           const balanceOfBaseId1 = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_1);
           const balanceOfBaseId2 = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_2);
+
+          expect(balanceOfBaseId1).to.eq(mintBatchAmounts[0].add(mintBatchAmounts[1]));
+          expect(balanceOfBaseId2).to.eq(mintBatchAmounts[2].add(mintBatchAmounts[3]));
+        });
+      });
+
+      describe("To an EOA", () => {
+        let v: number;
+        let r: string;
+        let s: string;
+
+        beforeEach(async () => {
+          ({ v, r, s } = await getMintBatchApprovalSignature({
+            signer: eoaRecipient1,
+            erc1238ContractAddress: badgeMint.address,
+            chainId,
+            ids: tokenBatchIds,
+            amounts: mintBatchAmounts,
+          }));
+        });
+
+        it("should credit the right base ids", async () => {
+          await badgeMint
+            .connect(admin)
+            .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
+
+          const balanceOfBaseId1 = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_1);
+          const balanceOfBaseId2 = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_2);
 
           expect(balanceOfBaseId1).to.eq(mintBatchAmounts[0].add(mintBatchAmounts[1]));
           expect(balanceOfBaseId2).to.eq(mintBatchAmounts[2].add(mintBatchAmounts[3]));
