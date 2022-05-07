@@ -40,8 +40,8 @@ export type TestEnv = {
 };
 
 const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
-  const BeforeBurnLogicArtifact: Artifact = await artifacts.readArtifact(artifactName);
-  return await waffle.deployContract(deployer, BeforeBurnLogicArtifact);
+  const artifact: Artifact = await artifacts.readArtifact(artifactName);
+  return await waffle.deployContract(deployer, artifact);
 };
 
 export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestEnv> => {
