@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
-import "../hooks/IBeforeBurnLogic.sol";
+import "../hooks/generic/IBeforeBurnLogic.sol";
 import "./IBurnBaseLogic.sol";
 
 contract BurnBaseLogic is IBurnBaseLogic {

@@ -83,7 +83,7 @@ describe("Badge - Burning", function () {
 
       it("should revert when burning a non-existent token id", async () => {
         await expect(badgeBurn.connect(admin).burn(eoaRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
-          "ERC1238: burn amount exceeds balance",
+          "ERC1238: burn amount exceeds base id balance",
         );
       });
 
@@ -92,7 +92,7 @@ describe("Badge - Burning", function () {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
 
         await expect(badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
-          "ERC1238: burn amount exceeds balance",
+          "ERC1238: burn amount exceeds base id balance",
         );
       });
 
