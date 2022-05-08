@@ -11,8 +11,11 @@ contract Badge is Extendable {
         string memory baseURI_,
         address extendLogic,
         address balanceGettersLogic,
+        address baseURILogic,
         address beforeMintLogic,
-        address mintLogic
+        address mintLogic,
+        address beforeBurnLogic,
+        address burnLogic
     ) Extendable(extendLogic) {
         ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
         erc1238Storage.baseURI = baseURI_;
@@ -20,18 +23,35 @@ contract Badge is Extendable {
         (bool balanceExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", balanceGettersLogic)
         );
-        (bool mintExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", mintLogic));
+        require(balanceExtendSuccess, "Failed to extend with balance extension");
+
+        (bool baseURIExendSuccess, ) = extendLogic.delegatecall(
+            abi.encodeWithSignature("extend(address)", baseURILogic)
+        );
+        require(baseURIExendSuccess, "Failed to extend with baseURI extension");
+
         (bool beforeMintExtendSuccess, ) = extendLogic.delegatecall(
             abi.encodeWithSignature("extend(address)", beforeMintLogic)
         );
+        require(beforeMintExtendSuccess, "Failed to extend with beforeMint extension");
 
-        (bool success, bytes memory data) = mintLogic.delegatecall(abi.encodeWithSignature("getDomainSeparator()"));
+        (bool mintExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", mintLogic));
+        require(mintExtendSuccess, "Failed to extend with mint extension");
+
+        (bool beforeBurnExtendSuccess, ) = extendLogic.delegatecall(
+            abi.encodeWithSignature("extend(address)", beforeBurnLogic)
+        );
+        require(beforeBurnExtendSuccess, "Failed to extend with beforeBurn extension");
+
+        (bool burnExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", burnLogic));
+        require(burnExtendSuccess, "Failed to extend with burn extension");
+
+        (bool getDomainSeparatorSuccess, bytes memory data) = mintLogic.delegatecall(
+            abi.encodeWithSignature("getDomainSeparator()")
+        );
+        require(getDomainSeparatorSuccess, "Failed to get the domain separator");
 
         ERC1238ApprovalState storage erc1238ApprovalStorage = ERC1238ApprovalStorage._getStorage();
         erc1238ApprovalStorage.domainTypeHash = bytes32(data);
-
-        if (!balanceExtendSuccess || !mintExtendSuccess || !beforeMintExtendSuccess) {
-            revert("Fail to extend with all extensions");
-        }
     }
 }

@@ -7,11 +7,14 @@ import "./IBaseURILogic.sol";
 
 contract BaseURILogic is InternalExtension, IBaseURILogic {
     /**
-     * @dev See {IBaseURILogic-_baseURI}.
+     * @dev See {IBaseURILogic-baseURI}.
+     * Warning: Calling this function from another extension will fail.
      */
-    function _baseURI() public virtual override _internal returns (string memory) {
+    function baseURI() external view virtual override returns (string memory) {
         ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
-        return erc1238Storage.baseURI;
+        string memory base = erc1238Storage.baseURI;
+
+        return base;
     }
 
     /**
@@ -29,7 +32,7 @@ contract BaseURILogic is InternalExtension, IBaseURILogic {
 
     function getInterface() public pure virtual override returns (string memory) {
         return
-            "function _baseURI() external returns (string memory);\n"
+            "function baseURI() external view returns (string memory);\n"
             "function _setBaseURI(string memory newBaseURI) external;\n";
     }
 }
