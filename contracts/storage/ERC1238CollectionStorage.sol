@@ -9,10 +9,10 @@ struct ERC1238CollectionState {
 library ERC1238CollectionStorage {
     bytes32 constant STORAGE_NAME = keccak256("extendable:erc1238:collection");
 
-    function _getStorage() internal view returns (ERC1238CollectionState storage erc1238CollectionStorage) {
+    function _getStorage() internal view returns (ERC1238CollectionState storage erc1238CollectionState) {
         bytes32 position = keccak256(abi.encodePacked(address(this), STORAGE_NAME));
         assembly {
-            erc1238CollectionStorage.slot := position
+            erc1238CollectionState.slot := position
         }
     }
 }
