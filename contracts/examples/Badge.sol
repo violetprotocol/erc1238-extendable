@@ -5,18 +5,21 @@ import "@violetprotocol/extendable/extendable/Extendable.sol";
 import "@violetprotocol/extendable/extensions/extend/IExtendLogic.sol";
 import { ERC1238State, ERC1238Storage } from "../storage/ERC1238Storage.sol";
 import { ERC1238ApprovalState, ERC1238ApprovalStorage } from "../storage/ERC1238ApprovalStorage.sol";
+import { PermissionState, PermissionStorage } from "../storage/PermissionStorage.sol";
 
 contract Badge is Extendable {
     constructor(
+        address rootController,
         string memory baseURI_,
         address extendLogic,
         address balanceGettersLogic,
         address baseURILogic,
-        address beforeMintLogic,
         address mintLogic,
-        address beforeBurnLogic,
         address burnLogic
     ) Extendable(extendLogic) {
+        PermissionState storage permissionState = PermissionStorage._getState();
+        permissionState.rootController = rootController;
+
         ERC1238State storage erc1238State = ERC1238Storage._getState();
         erc1238State.baseURI = baseURI_;
 
@@ -30,18 +33,8 @@ contract Badge is Extendable {
         );
         require(baseURIExendSuccess, "Failed to extend with baseURI extension");
 
-        (bool beforeMintExtendSuccess, ) = extendLogic.delegatecall(
-            abi.encodeWithSignature("extend(address)", beforeMintLogic)
-        );
-        require(beforeMintExtendSuccess, "Failed to extend with beforeMint extension");
-
         (bool mintExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", mintLogic));
         require(mintExtendSuccess, "Failed to extend with mint extension");
-
-        (bool beforeBurnExtendSuccess, ) = extendLogic.delegatecall(
-            abi.encodeWithSignature("extend(address)", beforeBurnLogic)
-        );
-        require(beforeBurnExtendSuccess, "Failed to extend with beforeBurn extension");
 
         (bool burnExtendSuccess, ) = extendLogic.delegatecall(abi.encodeWithSignature("extend(address)", burnLogic));
         require(burnExtendSuccess, "Failed to extend with burn extension");

@@ -12,6 +12,7 @@ import {
   ERC1238ReceiverMock,
   IBalanceGettersLogic,
   ICollectionLogic,
+  IPermissionLogic,
 } from "../../src/types";
 import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
 import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, chainId, makeTestEnv } from "./badgeTestEnvSetup";
@@ -29,6 +30,7 @@ describe("Badge - Collection", function () {
   let badgeMint: BadgeMintLogic;
   let badgeBurn: BurnLogic;
   let badgeCollectionLogic: ICollectionLogic;
+  let badgeIPermissionLogic: IPermissionLogic;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -46,7 +48,9 @@ describe("Badge - Collection", function () {
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
-    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...baseExtensionsAddresses]);
+    badge = <Badge>(
+      await waffle.deployContract(admin, badgeArtifact, [admin.address, baseURI, ...baseExtensionsAddresses])
+    );
 
     const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
     Object.values(additionalExtensions).forEach(async extension => {
@@ -57,6 +61,11 @@ describe("Badge - Collection", function () {
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
     badgeBurn = <BurnLogic>await ethers.getContractAt("BurnLogic", badge.address);
     badgeCollectionLogic = <ICollectionLogic>await ethers.getContractAt("ICollectionLogic", badge.address);
+    badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
+
+    // Set permissions
+    await badgeIPermissionLogic.setIntermediateController(admin.address);
+    await badgeIPermissionLogic.setController(admin.address);
   });
 
   describe("Badge - Collection", () => {

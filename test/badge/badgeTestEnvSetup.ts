@@ -13,6 +13,7 @@ import {
   CollectionLogic,
   ERC1238ReceiverMock,
   ExtendLogic,
+  PermissionLogic,
   TokenURIGetLogic,
   TokenURISetLogic,
 } from "../../src/types";
@@ -21,16 +22,17 @@ export type BadgeBaseExtensions = {
   extendLogic: ExtendLogic;
   balanceGettersLogic: BalanceGettersLogic;
   baseURILogic: BaseURILogic;
-  beforeMintLogic: BadgeBeforeMintLogic;
   badgeMintLogic: BadgeMintLogic;
-  beforeBurnLogic: BadgeBeforeBurnLogic;
   burnLogic: BurnLogic;
 };
 
 export type BadgeAdditionalExtensions = {
+  beforeMintLogic: BadgeBeforeMintLogic;
+  beforeBurnLogic: BadgeBeforeBurnLogic;
   tokenURIGetLogic: TokenURIGetLogic;
   tokenURISetLogic: TokenURISetLogic;
   collectionLogic: CollectionLogic;
+  permissionLogic: PermissionLogic;
 };
 
 export type TestEnv = {
@@ -70,6 +72,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const tokenURIGetLogic = <TokenURIGetLogic>await getDeployedContractFromArtifact("TokenURIGetLogic");
   const tokenURISetLogic = <TokenURISetLogic>await getDeployedContractFromArtifact("TokenURISetLogic");
   const collectionLogic = <CollectionLogic>await getDeployedContractFromArtifact("CollectionLogic");
+  const permissionLogic = <PermissionLogic>await getDeployedContractFromArtifact("PermissionLogic");
 
   return {
     recipients: {
@@ -80,15 +83,16 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
       extendLogic,
       balanceGettersLogic,
       baseURILogic,
-      beforeMintLogic,
       badgeMintLogic,
-      beforeBurnLogic,
       burnLogic,
     },
     additionalExtensions: {
+      beforeMintLogic,
+      beforeBurnLogic,
       tokenURIGetLogic,
       tokenURISetLogic,
       collectionLogic,
+      permissionLogic,
     },
   };
 };

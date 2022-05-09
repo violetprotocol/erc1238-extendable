@@ -11,6 +11,7 @@ import {
   ERC1238ReceiverMock,
   IBalanceGettersLogic,
   IMintBaseLogic,
+  IPermissionLogic,
   ITokenURIGetLogic,
   ITokenURISetLogic,
 } from "../../src/types";
@@ -32,6 +33,7 @@ describe("Badge - Minting", function () {
   let badgeIMintBaseLogic: IMintBaseLogic;
   let badgeITokenURIGetLogic: ITokenURIGetLogic;
   let badgeITokenURISetLogic: ITokenURISetLogic;
+  let badgeIPermissionLogic: IPermissionLogic;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -49,7 +51,9 @@ describe("Badge - Minting", function () {
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
-    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...baseExtensionsAddresses]);
+    badge = <Badge>(
+      await waffle.deployContract(admin, badgeArtifact, [admin.address, baseURI, ...baseExtensionsAddresses])
+    );
 
     const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
     Object.values(additionalExtensions).forEach(async extension => {
@@ -61,6 +65,11 @@ describe("Badge - Minting", function () {
     badgeIMintBaseLogic = await ethers.getContractAt("IMintBaseLogic", badge.address);
     badgeITokenURIGetLogic = <ITokenURIGetLogic>await ethers.getContractAt("ITokenURIGetLogic", badge.address);
     badgeITokenURISetLogic = <ITokenURISetLogic>await ethers.getContractAt("ITokenURISetLogic", badge.address);
+    badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
+
+    // Set permissions
+    await badgeIPermissionLogic.setIntermediateController(admin.address);
+    await badgeIPermissionLogic.setController(admin.address);
   });
 
   describe("Minting", () => {
