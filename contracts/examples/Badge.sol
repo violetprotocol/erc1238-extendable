@@ -17,7 +17,7 @@ contract Badge is Extendable {
         address beforeBurnLogic,
         address burnLogic
     ) Extendable(extendLogic) {
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
         erc1238Storage.baseURI = baseURI_;
 
         (bool balanceExtendSuccess, ) = extendLogic.delegatecall(
@@ -51,7 +51,7 @@ contract Badge is Extendable {
         );
         require(getDomainSeparatorSuccess, "Failed to get the domain separator");
 
-        ERC1238ApprovalState storage erc1238ApprovalStorage = ERC1238ApprovalStorage._getStorage();
+        ERC1238ApprovalState storage erc1238ApprovalStorage = ERC1238ApprovalStorage._getState();
         erc1238ApprovalStorage.domainTypeHash = bytes32(data);
     }
 }

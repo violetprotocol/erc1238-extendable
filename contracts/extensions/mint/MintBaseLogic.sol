@@ -158,7 +158,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
         address minter = msg.sender;
 
         IBeforeMintLogic(address(this))._beforeMint(minter, to, id, amount, data);
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
 
         erc1238Storage._balances[id][to] += amount;
 
@@ -183,7 +183,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
         require(ids.length == amounts.length, "ERC1238: ids and amounts length mismatch");
 
         address minter = msg.sender;
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
 
         for (uint256 i = 0; i < ids.length; i++) {
             IBeforeMintLogic(address(this))._beforeMint(minter, to, ids[i], amounts[i], data);

@@ -11,7 +11,7 @@ contract ERC1238 is Extendable {
         address extendLogic,
         address getterLogic
     ) Extendable(extendLogic) {
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
         erc1238Storage.baseURI = baseURI_;
 
         IExtendLogic(address(this)).extend(getterLogic);

@@ -11,7 +11,7 @@ contract BaseURILogic is InternalExtension, IBaseURILogic {
      * Warning: Calling this function from another extension will fail.
      */
     function baseURI() external view virtual override returns (string memory) {
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
         string memory base = erc1238Storage.baseURI;
 
         return base;
@@ -21,7 +21,7 @@ contract BaseURILogic is InternalExtension, IBaseURILogic {
      * @dev See {IBaseURILogic-_setBaseURI}.
      */
     function _setBaseURI(string memory newBaseURI) public virtual override _internal {
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
 
         erc1238Storage.baseURI = newBaseURI;
     }

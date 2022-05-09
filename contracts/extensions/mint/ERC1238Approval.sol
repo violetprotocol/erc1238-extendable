@@ -128,7 +128,7 @@ contract ERC1238Approval {
         bytes32 r,
         bytes32 s
     ) internal view {
-        ERC1238ApprovalState storage erc1238ApprovalStorage = ERC1238ApprovalStorage._getStorage();
+        ERC1238ApprovalState storage erc1238ApprovalStorage = ERC1238ApprovalStorage._getState();
 
         bytes32 digest = keccak256(
             abi.encodePacked("\x19\x01", erc1238ApprovalStorage.domainTypeHash, mintApprovalHash)

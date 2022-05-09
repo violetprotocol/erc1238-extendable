@@ -11,7 +11,7 @@ contract TokenURIGetLogic is Extension, ITokenURIGetLogic {
      * @dev See {IERC1238URIStorage-tokenURI}.
      */
     function tokenURI(uint256 id) public view virtual override returns (string memory) {
-        ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getStorage();
+        ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getState();
 
         string memory _tokenURI = erc1238URIStorage._tokenURIs[id];
 
@@ -20,7 +20,7 @@ contract TokenURIGetLogic is Extension, ITokenURIGetLogic {
             return _tokenURI;
         }
 
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
 
         return erc1238Storage.baseURI;
     }
