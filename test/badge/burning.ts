@@ -12,7 +12,7 @@ import {
   IBalanceGettersLogic,
   IBurnBaseLogic,
 } from "../../src/types";
-import { BadgeAdditionalExtensions, BadgeBaseExtensions, makeTestEnv } from "./badgeTestEnvSetup";
+import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - Burning", function () {
   let admin: SignerWithAddress;
@@ -42,7 +42,6 @@ describe("Badge - Burning", function () {
   });
 
   beforeEach(async function () {
-    const baseURI: string = "baseURI";
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
@@ -83,7 +82,7 @@ describe("Badge - Burning", function () {
 
       it("should revert when burning a non-existent token id", async () => {
         await expect(badgeBurn.connect(admin).burn(eoaRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
-          "ERC1238: burn amount exceeds balance",
+          "ERC1238: burn amount exceeds base id balance",
         );
       });
 
@@ -92,7 +91,7 @@ describe("Badge - Burning", function () {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
 
         await expect(badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
-          "ERC1238: burn amount exceeds balance",
+          "ERC1238: burn amount exceeds base id balance",
         );
       });
 

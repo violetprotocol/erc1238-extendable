@@ -2,13 +2,15 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { artifacts, ethers, waffle } from "hardhat";
 import { Artifact } from "hardhat/types";
 
+import { chainIds } from "../../hardhat.config";
 import {
+  BadgeBeforeBurnLogic,
+  BadgeBeforeMintLogic,
   BadgeMintLogic,
   BalanceGettersLogic,
   BaseURILogic,
-  BeforeBurnLogic,
-  BeforeMintLogic,
   BurnLogic,
+  CollectionLogic,
   ERC1238ReceiverMock,
   ExtendLogic,
   TokenURIGetLogic,
@@ -19,15 +21,16 @@ export type BadgeBaseExtensions = {
   extendLogic: ExtendLogic;
   balanceGettersLogic: BalanceGettersLogic;
   baseURILogic: BaseURILogic;
-  beforeMintLogic: BeforeMintLogic;
+  beforeMintLogic: BadgeBeforeMintLogic;
   badgeMintLogic: BadgeMintLogic;
-  beforeBurnLogic: BeforeBurnLogic;
+  beforeBurnLogic: BadgeBeforeBurnLogic;
   burnLogic: BurnLogic;
 };
 
 export type BadgeAdditionalExtensions = {
   tokenURIGetLogic: TokenURIGetLogic;
   tokenURISetLogic: TokenURISetLogic;
+  collectionLogic: CollectionLogic;
 };
 
 export type TestEnv = {
@@ -39,7 +42,9 @@ export type TestEnv = {
   additionalExtensions: BadgeAdditionalExtensions;
 };
 
-const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
+export const chainId = chainIds.hardhat;
+export const baseURI: string = "baseURI";
+export const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
   const artifact: Artifact = await artifacts.readArtifact(artifactName);
   return await waffle.deployContract(deployer, artifact);
 };
@@ -58,12 +63,13 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
 
   const balanceGettersLogic = <BalanceGettersLogic>await getDeployedContractFromArtifact("BalanceGettersLogic");
   const baseURILogic = <BaseURILogic>await getDeployedContractFromArtifact("BaseURILogic");
-  const beforeMintLogic = <BeforeMintLogic>await getDeployedContractFromArtifact("BeforeMintLogic");
+  const beforeMintLogic = <BadgeBeforeMintLogic>await getDeployedContractFromArtifact("BadgeBeforeMintLogic");
   const badgeMintLogic = <BadgeMintLogic>await getDeployedContractFromArtifact("BadgeMintLogic");
-  const beforeBurnLogic = <BeforeBurnLogic>await getDeployedContractFromArtifact("BeforeBurnLogic");
+  const beforeBurnLogic = <BadgeBeforeBurnLogic>await getDeployedContractFromArtifact("BadgeBeforeBurnLogic");
   const burnLogic = <BurnLogic>await getDeployedContractFromArtifact("BurnLogic");
   const tokenURIGetLogic = <TokenURIGetLogic>await getDeployedContractFromArtifact("TokenURIGetLogic");
   const tokenURISetLogic = <TokenURISetLogic>await getDeployedContractFromArtifact("TokenURISetLogic");
+  const collectionLogic = <CollectionLogic>await getDeployedContractFromArtifact("CollectionLogic");
 
   return {
     recipients: {
@@ -82,6 +88,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
     additionalExtensions: {
       tokenURIGetLogic,
       tokenURISetLogic,
+      collectionLogic,
     },
   };
 };

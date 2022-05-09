@@ -5,7 +5,6 @@ import { toBn } from "evm-bn";
 import { artifacts, ethers, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
 
-import { chainIds } from "../../hardhat.config";
 import {
   Badge,
   BadgeMintLogic,
@@ -16,11 +15,7 @@ import {
   ITokenURISetLogic,
 } from "../../src/types";
 import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
-import { BadgeAdditionalExtensions, BadgeBaseExtensions, makeTestEnv } from "./badgeTestEnvSetup";
-
-const chainId = chainIds.hardhat;
-
-const baseURI: string = "baseURI";
+import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, chainId, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - Minting", function () {
   let admin: SignerWithAddress;
