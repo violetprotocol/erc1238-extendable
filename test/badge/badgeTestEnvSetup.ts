@@ -64,7 +64,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const extendLogic = await ExtendLogicFactory.deploy();
 
   const balanceGettersLogic = <BalanceGettersLogic>await getDeployedContractFromArtifact("BalanceGettersLogic");
-  const baseURILogic = <BaseURILogic>await getDeployedContractFromArtifact("BaseURILogic");
+  const baseURILogic = <BaseURILogic>await getDeployedContractFromArtifact("BadgeBaseURILogic");
   const beforeMintLogic = <BadgeBeforeMintLogic>await getDeployedContractFromArtifact("BadgeBeforeMintLogic");
   const badgeMintLogic = <BadgeMintLogic>await getDeployedContractFromArtifact("BadgeMintLogic");
   const beforeBurnLogic = <BadgeBeforeBurnLogic>await getDeployedContractFromArtifact("BadgeBeforeBurnLogic");
