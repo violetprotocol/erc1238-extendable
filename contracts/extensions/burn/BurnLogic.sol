@@ -6,7 +6,7 @@ import "./BurnBaseLogic.sol";
 import "./IBurnLogic.sol";
 import "../permission/PermissionLogic.sol";
 
-// TODO: Update with permissions & URIs
+// TODO: Update with URIs
 contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
     function burn(
         address from,
