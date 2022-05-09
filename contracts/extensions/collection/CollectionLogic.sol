@@ -67,6 +67,8 @@ contract CollectionLogic is InternalExtension, ICollectionLogic {
     function getInterface() public pure virtual override returns (string memory) {
         return
             "function balanceFromBaseId(address account, uint48 baseId) external view returns (uint256);\n"
-            "function getConstructedTokenID(uint48 baseId, address account, uint48 counter) external pure returns (uint256);\n";
+            "function getConstructedTokenID(uint48 baseId, address account, uint48 counter) external pure returns (uint256);\n"
+            "function _incrementBaseIdBalance(address to, uint256 id, uint256 amount) external;\n"
+            "function _decrementBaseIdBalance(address from, uint256 id, uint256 amount) external;\n";
     }
 }
