@@ -14,7 +14,7 @@ contract BadgeBaseURILogic is InternalExtension, BaseURILogic, IBadgeBaseURILogi
         _setBaseURI(newBaseURI);
     }
 
-    function baseURI() public view override(BaseURILogic, IBadgeBaseURILogic) _internal returns (string memory) {
+    function baseURI() public view override(BaseURILogic, IBadgeBaseURILogic) returns (string memory) {
         return super.baseURI();
     }
 
@@ -24,7 +24,7 @@ contract BadgeBaseURILogic is InternalExtension, BaseURILogic, IBadgeBaseURILogi
 
     function getInterface() public pure virtual override returns (string memory) {
         return
-            "function baseURI() external view returns (string memory);\n"
-            "function _setBaseURI(string memory newBaseURI) external;\n";
+            "function setBaseURI(string calldata newBaseURI) external;\n"
+            "function baseURI() external view returns (string memory);\n";
     }
 }

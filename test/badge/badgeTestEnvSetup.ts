@@ -4,11 +4,11 @@ import { Artifact } from "hardhat/types";
 
 import { chainIds } from "../../hardhat.config";
 import {
+  BadgeBaseURILogic,
   BadgeBeforeBurnLogic,
   BadgeBeforeMintLogic,
   BadgeMintLogic,
   BalanceGettersLogic,
-  BaseURILogic,
   BurnLogic,
   CollectionLogic,
   ERC1238ReceiverMock,
@@ -21,7 +21,7 @@ import {
 export type BadgeBaseExtensions = {
   extendLogic: ExtendLogic;
   balanceGettersLogic: BalanceGettersLogic;
-  baseURILogic: BaseURILogic;
+  baseURILogic: BadgeBaseURILogic;
   badgeMintLogic: BadgeMintLogic;
   burnLogic: BurnLogic;
 };
@@ -64,7 +64,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const extendLogic = await ExtendLogicFactory.deploy();
 
   const balanceGettersLogic = <BalanceGettersLogic>await getDeployedContractFromArtifact("BalanceGettersLogic");
-  const baseURILogic = <BaseURILogic>await getDeployedContractFromArtifact("BadgeBaseURILogic");
+  const baseURILogic = <BadgeBaseURILogic>await getDeployedContractFromArtifact("BadgeBaseURILogic");
   const beforeMintLogic = <BadgeBeforeMintLogic>await getDeployedContractFromArtifact("BadgeBeforeMintLogic");
   const badgeMintLogic = <BadgeMintLogic>await getDeployedContractFromArtifact("BadgeMintLogic");
   const beforeBurnLogic = <BadgeBeforeBurnLogic>await getDeployedContractFromArtifact("BadgeBeforeBurnLogic");
