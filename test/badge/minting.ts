@@ -21,6 +21,7 @@ import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, chainId, makeT
 describe("Badge - Minting", function () {
   let admin: SignerWithAddress;
   let eoaRecipient1: SignerWithAddress;
+  let signer2: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
   let contractRecipient2: ERC1238ReceiverMock;
 
@@ -39,6 +40,7 @@ describe("Badge - Minting", function () {
     const signers = await ethers.getSigners();
     admin = signers[0];
     eoaRecipient1 = signers[1];
+    signer2 = signers[1];
 
     ({
       recipients: { contractRecipient1, contractRecipient2 },
@@ -108,6 +110,12 @@ describe("Badge - Minting", function () {
             .connect(admin)
             .mintToEOA(ethers.constants.AddressZero, tokenId, mintAmount, v, r, s, tokenURI, data),
         ).to.be.revertedWith("ERC1238: Approval verification failed");
+      });
+
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint.connect(signer2).mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
       });
 
       it("should credit the amount of tokens", async () => {
@@ -183,6 +191,12 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: ERC1238Receiver rejected tokens");
       });
 
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint.connect(signer2).mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
       it("should set the token URI", async () => {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
@@ -253,6 +267,14 @@ describe("Badge - Minting", function () {
               data,
             ),
         ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
+      });
+
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint
+            .connect(signer2)
+            .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
       });
 
       it("should credit the minted tokens", async () => {
@@ -332,6 +354,14 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: Recipient is not a contract");
       });
 
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint
+            .connect(signer2)
+            .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
       it("should credit the minted tokens", async () => {
         await badgeMint
           .connect(admin)
@@ -398,6 +428,12 @@ describe("Badge - Minting", function () {
         amounts = [mintBatchAmounts, mintBatchAmounts.map(id => id.add(3)), mintBatchAmounts.map(id => id.add(4))];
         uris = [tokenBatchURIs, tokenBatchURIs, tokenBatchURIs];
         expectedUris = [expectedTokenBatchURIs, expectedTokenBatchURIs, expectedTokenBatchURIs];
+      });
+
+      it("should revert if minter is not authorized", async () => {
+        await expect(badgeMint.connect(signer2).mintBundle(to, ids, amounts, uris, [])).to.be.revertedWith(
+          "Unauthorized: caller is not the controller",
+        );
       });
 
       it("should mint a bundle to multiple addresses", async () => {
