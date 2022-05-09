@@ -11,18 +11,18 @@ contract TokenURIGetLogic is Extension, ITokenURIGetLogic {
      * @dev See {IERC1238URIStorage-tokenURI}.
      */
     function tokenURI(uint256 id) public view virtual override returns (string memory) {
-        ERC1238URIState storage erc1238URIStorage = ERC1238URIStorage._getState();
+        ERC1238URIState storage erc1238URIState = ERC1238URIStorage._getState();
 
-        string memory _tokenURI = erc1238URIStorage._tokenURIs[id];
+        string memory _tokenURI = erc1238URIState._tokenURIs[id];
 
         // Returns the token URI if there is a specific one set that overrides the base URI
-        if (bytes(erc1238URIStorage._tokenURIs[id]).length > 0) {
+        if (bytes(erc1238URIState._tokenURIs[id]).length > 0) {
             return _tokenURI;
         }
 
-        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
+        ERC1238State storage erc1238State = ERC1238Storage._getState();
 
-        return erc1238Storage.baseURI;
+        return erc1238State.baseURI;
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {

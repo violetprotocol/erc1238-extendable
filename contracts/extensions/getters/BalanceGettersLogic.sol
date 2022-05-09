@@ -14,9 +14,9 @@ contract BalanceGettersLogic is IBalanceGettersLogic, Extension {
      * - `account` cannot be the zero address.
      */
     function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
-        ERC1238State storage erc1238Storage = ERC1238Storage._getState();
+        ERC1238State storage erc1238State = ERC1238Storage._getState();
 
-        return erc1238Storage._balances[id][account];
+        return erc1238State._balances[id][account];
     }
 
     /**
