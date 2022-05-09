@@ -27,12 +27,12 @@ contract BurnBaseLogic is IBurnBaseLogic {
 
         IBeforeBurnLogic(address(this))._beforeBurn(burner, from, id, amount);
 
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238State = ERC1238Storage._getState();
 
-        uint256 fromBalance = erc1238Storage._balances[id][from];
+        uint256 fromBalance = erc1238State._balances[id][from];
         require(fromBalance >= amount, "ERC1238: burn amount exceeds balance");
         unchecked {
-            erc1238Storage._balances[id][from] = fromBalance - amount;
+            erc1238State._balances[id][from] = fromBalance - amount;
         }
 
         emit BurnSingle(burner, from, id, amount);
@@ -59,7 +59,7 @@ contract BurnBaseLogic is IBurnBaseLogic {
 
         IBeforeBurnLogic beforeBurnLogic = IBeforeBurnLogic(address(this));
 
-        ERC1238State storage erc1238Storage = ERC1238Storage._getStorage();
+        ERC1238State storage erc1238State = ERC1238Storage._getState();
 
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
@@ -67,10 +67,10 @@ contract BurnBaseLogic is IBurnBaseLogic {
 
             beforeBurnLogic._beforeBurn(burner, from, id, amount);
 
-            uint256 fromBalance = erc1238Storage._balances[id][from];
+            uint256 fromBalance = erc1238State._balances[id][from];
             require(fromBalance >= amount, "ERC1238: burn amount exceeds balance");
             unchecked {
-                erc1238Storage._balances[id][from] = fromBalance - amount;
+                erc1238State._balances[id][from] = fromBalance - amount;
             }
         }
 

@@ -10,7 +10,7 @@ contract CollectionLogic is InternalExtension, ICollectionLogic {
      * @dev See {IERC1238Collection}-balanceFromBaseId.
      */
     function balanceFromBaseId(address account, uint48 baseId) public view override returns (uint256) {
-        ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getStorage();
+        ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getState();
 
         return erc1238CollectionState._baseIdBalances[account][baseId];
     }
@@ -36,7 +36,7 @@ contract CollectionLogic is InternalExtension, ICollectionLogic {
     ) public override _internal {
         uint48 baseId = uint48(id >> 208);
 
-        ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getStorage();
+        ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getState();
 
         erc1238CollectionState._baseIdBalances[to][baseId] += amount;
     }
@@ -51,7 +51,7 @@ contract CollectionLogic is InternalExtension, ICollectionLogic {
     ) public override _internal {
         uint48 baseId = uint48(id >> 208);
 
-        ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getStorage();
+        ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getState();
 
         uint256 baseIdBalance = erc1238CollectionState._baseIdBalances[from][baseId];
         require(baseIdBalance >= amount, "ERC1238: burn amount exceeds base id balance");
