@@ -9,9 +9,9 @@ import "../permission/IPermissionLogic.sol";
 contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
     /**
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
-     * Visibility: public.
+     * Used for external calls.
      */
-    function setTokenURI(uint256 id, string memory _tokenURI) public {
+    function setTokenURI(uint256 id, string memory _tokenURI) external {
         IPermissionLogic(address(this)).revertIfNotController();
         _updateTokenURI(id, _tokenURI);
     }
