@@ -9,13 +9,13 @@ interface IBalanceGettersLogic {
      *
      * - `account` cannot be the zero address.
      */
-    function balanceOf(address account, uint256 id) external view returns (uint256);
+    function balanceOf(address account, uint256 id) external returns (uint256);
 
     /**
      * @dev Returns the balance of `account` for a batch of token `ids`
      *
      */
-    function balanceOfBatch(address account, uint256[] calldata ids) external view returns (uint256[] memory);
+    function balanceOfBatch(address account, uint256[] calldata ids) external returns (uint256[] memory);
 
     /**
      * @dev Returns the balance of multiple `accounts` for a batch of token `ids`.
@@ -27,6 +27,5 @@ interface IBalanceGettersLogic {
      */
     function balanceOfBundle(address[] calldata accounts, uint256[][] calldata ids)
         external
-        view
         returns (uint256[][] memory);
 }

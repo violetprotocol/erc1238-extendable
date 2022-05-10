@@ -121,7 +121,7 @@ describe("Badge - Minting", function () {
       it("should credit the amount of tokens", async () => {
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
-        const balance = await badgeIBalance.balanceOf(eoaRecipient1.address, tokenId);
+        const balance = await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, tokenId);
 
         expect(balance).to.eq(mintAmount);
       });
@@ -173,7 +173,7 @@ describe("Badge - Minting", function () {
       it("should credit the amount of tokens", async () => {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
-        const balance = await badgeIBalance.balanceOf(contractRecipient1.address, tokenId);
+        const balance = await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId);
 
         expect(balance).to.eq(mintAmount);
       });
@@ -283,7 +283,9 @@ describe("Badge - Minting", function () {
           .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
 
         tokenBatchIds.forEach(async (tokenId, index) =>
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, tokenId)).to.eq(mintBatchAmounts[index]),
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, tokenId)).to.eq(
+            mintBatchAmounts[index],
+          ),
         );
       });
 
@@ -368,7 +370,9 @@ describe("Badge - Minting", function () {
           .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
 
         tokenBatchIds.forEach(async (tokenId, index) =>
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(mintBatchAmounts[index]),
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(
+            mintBatchAmounts[index],
+          ),
         );
       });
 
@@ -449,17 +453,17 @@ describe("Badge - Minting", function () {
 
         await badgeMint.mintBundle(to, ids, amounts, uris, data);
 
-        const balancesOfRecipient1: BigNumber[] = await badgeIBalance.balanceOfBatch(to[0], ids[0]);
+        const balancesOfRecipient1: BigNumber[] = await badgeIBalance.callStatic.balanceOfBatch(to[0], ids[0]);
         balancesOfRecipient1.forEach((balance, j) => {
           expect(balance).to.eq(amounts[0][j]);
         });
 
-        const balancesOfRecipient2: BigNumber[] = await badgeIBalance.balanceOfBatch(to[1], ids[1]);
+        const balancesOfRecipient2: BigNumber[] = await badgeIBalance.callStatic.balanceOfBatch(to[1], ids[1]);
         balancesOfRecipient2.forEach((balance, i) => {
           expect(balance).to.eq(amounts[1][i]);
         });
 
-        const balancesOfRecipient3: BigNumber[] = await badgeIBalance.balanceOfBatch(to[2], ids[2]);
+        const balancesOfRecipient3: BigNumber[] = await badgeIBalance.callStatic.balanceOfBatch(to[2], ids[2]);
         balancesOfRecipient3.forEach((balance, i) => {
           expect(balance).to.eq(amounts[2][i]);
         });
