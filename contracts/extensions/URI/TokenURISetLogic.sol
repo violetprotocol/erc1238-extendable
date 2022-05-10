@@ -4,28 +4,27 @@ pragma solidity ^0.8.13;
 import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { ERC1238URIState, ERC1238URIStorage } from "../../storage/ERC1238URIStorage.sol";
 import "./ITokenURISetLogic.sol";
+import "../permission/IPermissionLogic.sol";
 
 contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
     /**
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
-     *
+     * Visibility: public.
      */
-    // TODO: Add permissions
     function setTokenURI(uint256 id, string memory _tokenURI) public {
-        _setTokenURI(id, _tokenURI);
+        IPermissionLogic(address(this)).revertIfNotController();
+        _updateTokenURI(id, _tokenURI);
     }
 
     /**
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
-     *
+     * Used for calls internal to the extendable contract.
+     * Updating the token URI is skipped if an empty string is passed.
      */
     function _setTokenURI(uint256 id, string memory _tokenURI) public _internal {
         if (bytes(_tokenURI).length == 0) return;
 
-        ERC1238URIState storage erc1238URIState = ERC1238URIStorage._getState();
-        erc1238URIState._tokenURIs[id] = _tokenURI;
-
-        emit URI(id, _tokenURI);
+        _updateTokenURI(id, _tokenURI);
     }
 
     /**
@@ -64,6 +63,13 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
         if (bytes(erc1238URIState._tokenURIs[id]).length > 0) {
             delete erc1238URIState._tokenURIs[id];
         }
+    }
+
+    function _updateTokenURI(uint256 id, string memory _tokenURI) private {
+        ERC1238URIState storage erc1238URIState = ERC1238URIStorage._getState();
+        erc1238URIState._tokenURIs[id] = _tokenURI;
+
+        emit URI(id, _tokenURI);
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {

@@ -1,9 +1,18 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
+import { toBn } from "evm-bn";
 import { artifacts, ethers, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
 
-import { Badge, BadgeBaseURILogic, ERC1238ReceiverMock, IPermissionLogic } from "../../src/types";
+import {
+  Badge,
+  BadgeBaseURILogic,
+  BadgeMintLogic,
+  ERC1238ReceiverMock,
+  IPermissionLogic,
+  ITokenURIGetLogic,
+  ITokenURISetLogic,
+} from "../../src/types";
 import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - URIs", function () {
@@ -17,8 +26,11 @@ describe("Badge - URIs", function () {
   let additionalExtensions: BadgeAdditionalExtensions;
 
   let badge: Badge;
+  let badgeMint: BadgeMintLogic;
   let badgeBaseURILogic: BadgeBaseURILogic;
   let badgeIPermissionLogic: IPermissionLogic;
+  let badgeITokenURIGetLogic: ITokenURIGetLogic;
+  let badgeITokenURISetLogic: ITokenURISetLogic;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -46,8 +58,11 @@ describe("Badge - URIs", function () {
       await badgeExtend.extend(extension.address);
     });
 
+    badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
     badgeBaseURILogic = <BadgeBaseURILogic>await ethers.getContractAt("BadgeBaseURILogic", badge.address);
     badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
+    badgeITokenURIGetLogic = <ITokenURIGetLogic>await ethers.getContractAt("ITokenURIGetLogic", badge.address);
+    badgeITokenURISetLogic = <ITokenURISetLogic>await ethers.getContractAt("ITokenURISetLogic", badge.address);
 
     // Set permissions
     await badgeIPermissionLogic.setIntermediateController(admin.address);
@@ -78,6 +93,41 @@ describe("Badge - URIs", function () {
     it("should not let unauthorized addresses update the base URI", async () => {
       await expect(badgeBaseURILogic.connect(signer2).setBaseURI("newURI")).to.be.revertedWith(
         "Unauthorized: caller is not the controller",
+      );
+    });
+  });
+
+  describe("Token URI", () => {
+    const tokenURI = "tokenURI";
+    const data = "0x12345678";
+    const tokenId = toBn("11223344");
+    const mintAmount = toBn("58319");
+
+    beforeEach(async () => {
+      await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
+
+      expect(await badgeITokenURIGetLogic.tokenURI(tokenId)).to.eq(tokenURI);
+    });
+
+    it("should let the controller update a token URI", async () => {
+      const newTokenURI = "newTokenURI";
+      await badgeITokenURISetLogic.setTokenURI(tokenId, newTokenURI);
+
+      expect(await badgeITokenURIGetLogic.tokenURI(tokenId)).to.eq(newTokenURI);
+    });
+
+    it("should not let unauthorized addresses update a token URI", async () => {
+      const newTokenURI = "newTokenURI";
+      await expect(badgeITokenURISetLogic.connect(eoaRecipient1).setTokenURI(tokenId, newTokenURI)).to.be.revertedWith(
+        "Unauthorized: caller is not the controller",
+      );
+      expect(await badgeITokenURIGetLogic.tokenURI(tokenId)).to.eq(tokenURI);
+    });
+
+    it("should revert when calling _setTokenURI from an EOA", async () => {
+      const newTokenURI = "newTokenURI";
+      await expect(badgeITokenURISetLogic.connect(admin)._setTokenURI(tokenId, newTokenURI)).to.be.revertedWith(
+        "external caller not allowed",
       );
     });
   });
