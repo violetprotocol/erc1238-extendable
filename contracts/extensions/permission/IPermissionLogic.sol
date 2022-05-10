@@ -4,11 +4,11 @@ pragma solidity ^0.8.13;
 interface IPermissionLogic {
     function revertIfNotController() external;
 
-    function getRootController() external view returns (address);
+    function getRootController() external returns (address);
 
-    function getIntermediateController() external view returns (address);
+    function getIntermediateController() external returns (address);
 
-    function getController() external view returns (address);
+    function getController() external returns (address);
 
     function setRootController(address newRootController) external;
 

@@ -51,13 +51,13 @@ describe("Badge - Permissions", function () {
     });
 
     it("should have the right root controller set", async () => {
-      expect(await badgeIPermissionLogic.getRootController()).to.eq(rootController.address);
+      expect(await badgeIPermissionLogic.callStatic.getRootController()).to.eq(rootController.address);
     });
     it("should have the right intermediate controller set", async () => {
-      expect(await badgeIPermissionLogic.getIntermediateController()).to.eq(intermediateController.address);
+      expect(await badgeIPermissionLogic.callStatic.getIntermediateController()).to.eq(intermediateController.address);
     });
     it("should have the right controller set", async () => {
-      expect(await badgeIPermissionLogic.getController()).to.eq(controller.address);
+      expect(await badgeIPermissionLogic.callStatic.getController()).to.eq(controller.address);
     });
   });
 
@@ -70,7 +70,7 @@ describe("Badge - Permissions", function () {
     it("should let the intermediate controller update the controller", async () => {
       await badgeIPermissionLogic.connect(intermediateController).setController(admin.address);
 
-      expect(await badgeIPermissionLogic.getController()).to.eq(admin.address);
+      expect(await badgeIPermissionLogic.callStatic.getController()).to.eq(admin.address);
     });
 
     it("should only let the intermediate controller update the controller", async () => {
@@ -82,7 +82,7 @@ describe("Badge - Permissions", function () {
     it("should let the root controller update the intermediate controller", async () => {
       await badgeIPermissionLogic.connect(rootController).setIntermediateController(admin.address);
 
-      expect(await badgeIPermissionLogic.getIntermediateController()).to.eq(admin.address);
+      expect(await badgeIPermissionLogic.callStatic.getIntermediateController()).to.eq(admin.address);
     });
 
     it("should only let the root controller update the intermediate controller", async () => {
@@ -94,7 +94,7 @@ describe("Badge - Permissions", function () {
     it("should let the root controller update the root controller", async () => {
       await badgeIPermissionLogic.connect(rootController).setRootController(admin.address);
 
-      expect(await badgeIPermissionLogic.getRootController()).to.eq(admin.address);
+      expect(await badgeIPermissionLogic.callStatic.getRootController()).to.eq(admin.address);
     });
 
     it("should only let the root controller update the root controller", async () => {

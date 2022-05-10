@@ -15,17 +15,17 @@ contract PermissionLogic is Extension, IPermissionLogic {
         );
     }
 
-    function getRootController() public view returns (address) {
+    function getRootController() public returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.rootController;
     }
 
-    function getIntermediateController() public view returns (address) {
+    function getIntermediateController() public returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.intermediateController;
     }
 
-    function getController() public view returns (address) {
+    function getController() public returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.controller;
     }
@@ -58,9 +58,9 @@ contract PermissionLogic is Extension, IPermissionLogic {
     function getInterface() public pure virtual override returns (string memory) {
         return
             "function revertIfNotController() external;\n"
-            "function getRootController() external view returns (address);\n"
-            "function getIntermediateController() external view returns (address);\n"
-            "function getController() external view returns (address);\n"
+            "function getRootController() external returns (address);\n"
+            "function getIntermediateController() external returns (address);\n"
+            "function getController() external returns (address);\n"
             "function setRootController(address newRootController) external;\n"
             "function setIntermediateController(address newIntermediateController) external;\n"
             "function setController(address newController) external;\n";
