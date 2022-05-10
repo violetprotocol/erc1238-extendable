@@ -71,7 +71,7 @@ describe("Badge - URIs", function () {
 
   describe("Base URI", () => {
     it("should return the right base URI", async () => {
-      expect(await badgeBaseURILogic.baseURI()).to.eq(baseURI);
+      expect(await badgeBaseURILogic.callStatic.baseURI()).to.eq(baseURI);
     });
 
     it("should let the controller update the base URI", async () => {
@@ -79,7 +79,7 @@ describe("Badge - URIs", function () {
 
       await badgeBaseURILogic.setBaseURI(newURI);
 
-      expect(await badgeBaseURILogic.baseURI()).to.eq(newURI);
+      expect(await badgeBaseURILogic.callStatic.baseURI()).to.eq(newURI);
     });
 
     it("should let update to an empty base URI", async () => {
@@ -87,7 +87,7 @@ describe("Badge - URIs", function () {
 
       await badgeBaseURILogic.setBaseURI(emptyURI);
 
-      expect(await badgeBaseURILogic.baseURI()).to.eq(emptyURI);
+      expect(await badgeBaseURILogic.callStatic.baseURI()).to.eq(emptyURI);
     });
 
     it("should not let unauthorized addresses update the base URI", async () => {

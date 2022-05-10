@@ -12,5 +12,5 @@ interface IBadgeBaseURILogic {
     /**
      * @dev See {IBaseURILogic-baseURI}
      */
-    function baseURI() external view returns (string memory);
+    function baseURI() external returns (string memory);
 }

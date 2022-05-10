@@ -8,13 +8,13 @@ import "./BaseURILogic.sol";
 import "./IBadgeBaseURILogic.sol";
 
 contract BadgeBaseURILogic is InternalExtension, BaseURILogic, IBadgeBaseURILogic {
-    function setBaseURI(string memory newBaseURI) external override {
+    function setBaseURI(string calldata newBaseURI) external override {
         IPermissionLogic(address(this)).revertIfNotController();
 
         _setBaseURI(newBaseURI);
     }
 
-    function baseURI() public view override(BaseURILogic, IBadgeBaseURILogic) returns (string memory) {
+    function baseURI() public override(BaseURILogic, IBadgeBaseURILogic) returns (string memory) {
         return super.baseURI();
     }
 
@@ -25,6 +25,6 @@ contract BadgeBaseURILogic is InternalExtension, BaseURILogic, IBadgeBaseURILogi
     function getInterface() public pure virtual override returns (string memory) {
         return
             "function setBaseURI(string calldata newBaseURI) external;\n"
-            "function baseURI() external view returns (string memory);\n";
+            "function baseURI() external returns (string memory);\n";
     }
 }
