@@ -56,7 +56,13 @@ contract PermissionLogic is Extension, IPermissionLogic {
     }
 
     function getInterface() public pure virtual override returns (string memory) {
-        // TODO
-        return "";
+        return
+            "function revertIfNotController() external;\n"
+            "function getRootController() external view returns (address);\n"
+            "function getIntermediateController() external view returns (address);\n"
+            "function getController() external view returns (address);\n"
+            "function setRootController(address newRootController) external;\n"
+            "function setIntermediateController(address newIntermediateController) external;\n"
+            "function setController(address newController) external;\n";
     }
 }
