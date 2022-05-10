@@ -115,7 +115,7 @@ describe("Badge - Burning", function () {
           badgeBurn.connect(signer2).burn(contractRecipient1.address, tokenId, burnAmount),
         ).to.be.revertedWith("Unauthorized: caller is not the controller");
 
-        expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
       });
 
       it("should burn the right amount of tokens", async () => {
@@ -125,7 +125,7 @@ describe("Badge - Burning", function () {
 
         await badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount);
 
-        expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(1);
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(1);
       });
 
       it("should emit a BurnSingle event", async () => {
@@ -184,7 +184,7 @@ describe("Badge - Burning", function () {
         await badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts);
 
         tokenBatchIds.forEach(async (tokenId, i) =>
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(
             mintBatchAmounts[i].sub(burnBatchAmounts[i]),
           ),
         );

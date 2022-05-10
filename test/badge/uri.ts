@@ -106,14 +106,14 @@ describe("Badge - URIs", function () {
     beforeEach(async () => {
       await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
-      expect(await badgeITokenURIGetLogic.tokenURI(tokenId)).to.eq(tokenURI);
+      expect(await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)).to.eq(tokenURI);
     });
 
     it("should let the controller update a token URI", async () => {
       const newTokenURI = "newTokenURI";
       await badgeITokenURISetLogic.setTokenURI(tokenId, newTokenURI);
 
-      expect(await badgeITokenURIGetLogic.tokenURI(tokenId)).to.eq(newTokenURI);
+      expect(await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)).to.eq(newTokenURI);
     });
 
     it("should not let unauthorized addresses update a token URI", async () => {
@@ -121,7 +121,7 @@ describe("Badge - URIs", function () {
       await expect(badgeITokenURISetLogic.connect(eoaRecipient1).setTokenURI(tokenId, newTokenURI)).to.be.revertedWith(
         "Unauthorized: caller is not the controller",
       );
-      expect(await badgeITokenURIGetLogic.tokenURI(tokenId)).to.eq(tokenURI);
+      expect(await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)).to.eq(tokenURI);
     });
 
     it("should revert when calling _setTokenURI from an EOA", async () => {

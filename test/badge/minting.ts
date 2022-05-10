@@ -129,7 +129,7 @@ describe("Badge - Minting", function () {
       it("should set the token URI", async () => {
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
-        const URI = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URI = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
 
         expect(URI).to.eq(tokenURI);
       });
@@ -137,7 +137,7 @@ describe("Badge - Minting", function () {
       it("should allow to set an empty token URI", async () => {
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, "", data);
 
-        const URI = await badgeITokenURIGetLogic.tokenURI(2);
+        const URI = await badgeITokenURIGetLogic.callStatic.tokenURI(2);
 
         expect(URI).to.eq(baseURI);
       });
@@ -146,13 +146,13 @@ describe("Badge - Minting", function () {
         // 1st mint we set the URI
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
-        const URIAfterFirstMint = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URIAfterFirstMint = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
         expect(URIAfterFirstMint).to.eq(tokenURI);
 
         // 2nd mint we pass an empty URI
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, "", data);
 
-        const URIAfterSecondMint = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URIAfterSecondMint = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
         expect(URIAfterSecondMint).to.eq(tokenURI);
       });
 
@@ -200,7 +200,7 @@ describe("Badge - Minting", function () {
       it("should set the token URI", async () => {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
-        const URI = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URI = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
 
         expect(URI).to.eq(tokenURI);
       });
@@ -295,7 +295,7 @@ describe("Badge - Minting", function () {
           .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
 
         const setURIs = await Promise.all(
-          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
+          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
         );
 
         expect(setURIs).to.eql(expectedTokenBatchURIs);
@@ -382,7 +382,7 @@ describe("Badge - Minting", function () {
           .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
 
         const setURIs = await Promise.all(
-          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
+          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
         );
 
         expect(setURIs).to.eql(expectedTokenBatchURIs);
@@ -484,7 +484,7 @@ describe("Badge - Minting", function () {
 
         // Fetch the URI set for each token id as a flattened array
         const setURIs = await Promise.all(
-          ids.flat().map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
+          ids.flat().map(async tokenId => await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
         );
         const expectedFlattenedURIs = expectedUris.flat();
 
