@@ -5,6 +5,7 @@ import "@violetprotocol/extendable/extensions/Extension.sol";
 import { PermissionState, PermissionStorage } from "../../storage/PermissionStorage.sol";
 import "./IPermissionLogic.sol";
 
+// TODO: Add events
 contract PermissionLogic is Extension, IPermissionLogic {
     function revertIfNotController() public {
         PermissionState storage permissionState = PermissionStorage._getState();

@@ -69,7 +69,7 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
      *
      */
     function _deleteTokenURI(uint256 id) public override _internal {
-        _deleteTokenURI(id);
+        _deleteTokenURIPrivate(id);
     }
 
     function _deleteTokenURIPrivate(uint256 id) private {
