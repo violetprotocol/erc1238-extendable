@@ -9,7 +9,7 @@ contract CollectionLogic is InternalExtension, ICollectionLogic {
     /**
      * @dev See {IERC1238Collection}-balanceFromBaseId.
      */
-    function balanceFromBaseId(address account, uint48 baseId) public view override returns (uint256) {
+    function balanceFromBaseId(address account, uint48 baseId) public override returns (uint256) {
         ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getState();
 
         return erc1238CollectionState._baseIdBalances[account][baseId];
@@ -66,7 +66,7 @@ contract CollectionLogic is InternalExtension, ICollectionLogic {
 
     function getInterface() public pure virtual override returns (string memory) {
         return
-            "function balanceFromBaseId(address account, uint48 baseId) external view returns (uint256);\n"
+            "function balanceFromBaseId(address account, uint48 baseId) external returns (uint256);\n"
             "function getConstructedTokenID(uint48 baseId, address account, uint48 counter) external pure returns (uint256);\n"
             "function _incrementBaseIdBalance(address to, uint256 id, uint256 amount) external;\n"
             "function _decrementBaseIdBalance(address from, uint256 id, uint256 amount) external;\n";

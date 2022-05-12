@@ -4,15 +4,16 @@ import { Artifact } from "hardhat/types";
 
 import { chainIds } from "../../hardhat.config";
 import {
+  BadgeBaseURILogic,
   BadgeBeforeBurnLogic,
   BadgeBeforeMintLogic,
   BadgeMintLogic,
   BalanceGettersLogic,
-  BaseURILogic,
   BurnLogic,
   CollectionLogic,
   ERC1238ReceiverMock,
   ExtendLogic,
+  PermissionLogic,
   TokenURIGetLogic,
   TokenURISetLogic,
 } from "../../src/types";
@@ -20,17 +21,18 @@ import {
 export type BadgeBaseExtensions = {
   extendLogic: ExtendLogic;
   balanceGettersLogic: BalanceGettersLogic;
-  baseURILogic: BaseURILogic;
-  beforeMintLogic: BadgeBeforeMintLogic;
+  baseURILogic: BadgeBaseURILogic;
   badgeMintLogic: BadgeMintLogic;
-  beforeBurnLogic: BadgeBeforeBurnLogic;
   burnLogic: BurnLogic;
 };
 
 export type BadgeAdditionalExtensions = {
+  beforeMintLogic: BadgeBeforeMintLogic;
+  beforeBurnLogic: BadgeBeforeBurnLogic;
   tokenURIGetLogic: TokenURIGetLogic;
   tokenURISetLogic: TokenURISetLogic;
   collectionLogic: CollectionLogic;
+  permissionLogic: PermissionLogic;
 };
 
 export type TestEnv = {
@@ -62,7 +64,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const extendLogic = await ExtendLogicFactory.deploy();
 
   const balanceGettersLogic = <BalanceGettersLogic>await getDeployedContractFromArtifact("BalanceGettersLogic");
-  const baseURILogic = <BaseURILogic>await getDeployedContractFromArtifact("BaseURILogic");
+  const baseURILogic = <BadgeBaseURILogic>await getDeployedContractFromArtifact("BadgeBaseURILogic");
   const beforeMintLogic = <BadgeBeforeMintLogic>await getDeployedContractFromArtifact("BadgeBeforeMintLogic");
   const badgeMintLogic = <BadgeMintLogic>await getDeployedContractFromArtifact("BadgeMintLogic");
   const beforeBurnLogic = <BadgeBeforeBurnLogic>await getDeployedContractFromArtifact("BadgeBeforeBurnLogic");
@@ -70,6 +72,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const tokenURIGetLogic = <TokenURIGetLogic>await getDeployedContractFromArtifact("TokenURIGetLogic");
   const tokenURISetLogic = <TokenURISetLogic>await getDeployedContractFromArtifact("TokenURISetLogic");
   const collectionLogic = <CollectionLogic>await getDeployedContractFromArtifact("CollectionLogic");
+  const permissionLogic = <PermissionLogic>await getDeployedContractFromArtifact("PermissionLogic");
 
   return {
     recipients: {
@@ -80,15 +83,16 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
       extendLogic,
       balanceGettersLogic,
       baseURILogic,
-      beforeMintLogic,
       badgeMintLogic,
-      beforeBurnLogic,
       burnLogic,
     },
     additionalExtensions: {
+      beforeMintLogic,
+      beforeBurnLogic,
       tokenURIGetLogic,
       tokenURISetLogic,
       collectionLogic,
+      permissionLogic,
     },
   };
 };

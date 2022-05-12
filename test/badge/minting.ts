@@ -11,6 +11,7 @@ import {
   ERC1238ReceiverMock,
   IBalanceGettersLogic,
   IMintBaseLogic,
+  IPermissionLogic,
   ITokenURIGetLogic,
   ITokenURISetLogic,
 } from "../../src/types";
@@ -20,6 +21,7 @@ import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, chainId, makeT
 describe("Badge - Minting", function () {
   let admin: SignerWithAddress;
   let eoaRecipient1: SignerWithAddress;
+  let signer2: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
   let contractRecipient2: ERC1238ReceiverMock;
 
@@ -32,11 +34,13 @@ describe("Badge - Minting", function () {
   let badgeIMintBaseLogic: IMintBaseLogic;
   let badgeITokenURIGetLogic: ITokenURIGetLogic;
   let badgeITokenURISetLogic: ITokenURISetLogic;
+  let badgeIPermissionLogic: IPermissionLogic;
 
   before(async function () {
     const signers = await ethers.getSigners();
     admin = signers[0];
     eoaRecipient1 = signers[1];
+    signer2 = signers[1];
 
     ({
       recipients: { contractRecipient1, contractRecipient2 },
@@ -49,7 +53,9 @@ describe("Badge - Minting", function () {
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
-    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...baseExtensionsAddresses]);
+    badge = <Badge>(
+      await waffle.deployContract(admin, badgeArtifact, [admin.address, baseURI, ...baseExtensionsAddresses])
+    );
 
     const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
     Object.values(additionalExtensions).forEach(async extension => {
@@ -61,6 +67,11 @@ describe("Badge - Minting", function () {
     badgeIMintBaseLogic = await ethers.getContractAt("IMintBaseLogic", badge.address);
     badgeITokenURIGetLogic = <ITokenURIGetLogic>await ethers.getContractAt("ITokenURIGetLogic", badge.address);
     badgeITokenURISetLogic = <ITokenURISetLogic>await ethers.getContractAt("ITokenURISetLogic", badge.address);
+    badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
+
+    // Set permissions
+    await badgeIPermissionLogic.setIntermediateController(admin.address);
+    await badgeIPermissionLogic.setController(admin.address);
   });
 
   describe("Minting", () => {
@@ -101,10 +112,16 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: Approval verification failed");
       });
 
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint.connect(signer2).mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
       it("should credit the amount of tokens", async () => {
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
-        const balance = await badgeIBalance.balanceOf(eoaRecipient1.address, tokenId);
+        const balance = await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, tokenId);
 
         expect(balance).to.eq(mintAmount);
       });
@@ -112,7 +129,7 @@ describe("Badge - Minting", function () {
       it("should set the token URI", async () => {
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
-        const URI = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URI = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
 
         expect(URI).to.eq(tokenURI);
       });
@@ -120,7 +137,7 @@ describe("Badge - Minting", function () {
       it("should allow to set an empty token URI", async () => {
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, "", data);
 
-        const URI = await badgeITokenURIGetLogic.tokenURI(2);
+        const URI = await badgeITokenURIGetLogic.callStatic.tokenURI(2);
 
         expect(URI).to.eq(baseURI);
       });
@@ -129,13 +146,13 @@ describe("Badge - Minting", function () {
         // 1st mint we set the URI
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
-        const URIAfterFirstMint = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URIAfterFirstMint = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
         expect(URIAfterFirstMint).to.eq(tokenURI);
 
         // 2nd mint we pass an empty URI
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, "", data);
 
-        const URIAfterSecondMint = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URIAfterSecondMint = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
         expect(URIAfterSecondMint).to.eq(tokenURI);
       });
 
@@ -156,7 +173,7 @@ describe("Badge - Minting", function () {
       it("should credit the amount of tokens", async () => {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
-        const balance = await badgeIBalance.balanceOf(contractRecipient1.address, tokenId);
+        const balance = await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId);
 
         expect(balance).to.eq(mintAmount);
       });
@@ -174,10 +191,16 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: ERC1238Receiver rejected tokens");
       });
 
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint.connect(signer2).mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
       it("should set the token URI", async () => {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
-        const URI = await badgeITokenURIGetLogic.tokenURI(tokenId);
+        const URI = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
 
         expect(URI).to.eq(tokenURI);
       });
@@ -246,13 +269,23 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
       });
 
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint
+            .connect(signer2)
+            .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
       it("should credit the minted tokens", async () => {
         await badgeMint
           .connect(admin)
           .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
 
         tokenBatchIds.forEach(async (tokenId, index) =>
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, tokenId)).to.eq(mintBatchAmounts[index]),
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, tokenId)).to.eq(
+            mintBatchAmounts[index],
+          ),
         );
       });
 
@@ -262,7 +295,7 @@ describe("Badge - Minting", function () {
           .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
 
         const setURIs = await Promise.all(
-          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
+          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
         );
 
         expect(setURIs).to.eql(expectedTokenBatchURIs);
@@ -323,13 +356,23 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: Recipient is not a contract");
       });
 
+      it("should revert if minter is not authorized", async () => {
+        await expect(
+          badgeMint
+            .connect(signer2)
+            .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
       it("should credit the minted tokens", async () => {
         await badgeMint
           .connect(admin)
           .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
 
         tokenBatchIds.forEach(async (tokenId, index) =>
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(mintBatchAmounts[index]),
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(
+            mintBatchAmounts[index],
+          ),
         );
       });
 
@@ -339,7 +382,7 @@ describe("Badge - Minting", function () {
           .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
 
         const setURIs = await Promise.all(
-          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
+          tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
         );
 
         expect(setURIs).to.eql(expectedTokenBatchURIs);
@@ -391,6 +434,12 @@ describe("Badge - Minting", function () {
         expectedUris = [expectedTokenBatchURIs, expectedTokenBatchURIs, expectedTokenBatchURIs];
       });
 
+      it("should revert if minter is not authorized", async () => {
+        await expect(badgeMint.connect(signer2).mintBundle(to, ids, amounts, uris, [])).to.be.revertedWith(
+          "Unauthorized: caller is not the controller",
+        );
+      });
+
       it("should mint a bundle to multiple addresses", async () => {
         const signatureFromEOA1 = await getMintBatchApprovalSignature({
           erc1238ContractAddress: badge.address,
@@ -404,17 +453,17 @@ describe("Badge - Minting", function () {
 
         await badgeMint.mintBundle(to, ids, amounts, uris, data);
 
-        const balancesOfRecipient1: BigNumber[] = await badgeIBalance.balanceOfBatch(to[0], ids[0]);
+        const balancesOfRecipient1: BigNumber[] = await badgeIBalance.callStatic.balanceOfBatch(to[0], ids[0]);
         balancesOfRecipient1.forEach((balance, j) => {
           expect(balance).to.eq(amounts[0][j]);
         });
 
-        const balancesOfRecipient2: BigNumber[] = await badgeIBalance.balanceOfBatch(to[1], ids[1]);
+        const balancesOfRecipient2: BigNumber[] = await badgeIBalance.callStatic.balanceOfBatch(to[1], ids[1]);
         balancesOfRecipient2.forEach((balance, i) => {
           expect(balance).to.eq(amounts[1][i]);
         });
 
-        const balancesOfRecipient3: BigNumber[] = await badgeIBalance.balanceOfBatch(to[2], ids[2]);
+        const balancesOfRecipient3: BigNumber[] = await badgeIBalance.callStatic.balanceOfBatch(to[2], ids[2]);
         balancesOfRecipient3.forEach((balance, i) => {
           expect(balance).to.eq(amounts[2][i]);
         });
@@ -435,7 +484,7 @@ describe("Badge - Minting", function () {
 
         // Fetch the URI set for each token id as a flattened array
         const setURIs = await Promise.all(
-          ids.flat().map(async tokenId => await badgeITokenURIGetLogic.tokenURI(tokenId)),
+          ids.flat().map(async tokenId => await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
         );
         const expectedFlattenedURIs = expectedUris.flat();
 

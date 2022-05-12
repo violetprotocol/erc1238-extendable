@@ -5,7 +5,7 @@ interface ICollectionLogic {
     /**
      * @dev Returns the balance of an address for a specific baseId.
      */
-    function balanceFromBaseId(address account, uint48 baseId) external view returns (uint256);
+    function balanceFromBaseId(address account, uint48 baseId) external returns (uint256);
 
     /**
      * @dev Returns a token id based on its sub-components.

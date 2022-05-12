@@ -1,16 +1,20 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-interface IBaseURILogic {
+import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
+import "./IBaseURILogic.sol";
+
+contract BaseURILogic is IBaseURILogic {
     /**
-     * @dev This implementation returns the same URI for *all* token types. It relies
-     * on the token type ID substitution mechanism as in EIP-1155:
-     * https://eips.ethereum.org/EIPS/eip-1155#metadata
-     *
-     * Clients calling this function must replace the `\{id\}` substring with the
-     * actual token type ID.
+     * @dev See {IBaseURILogic-baseURI}.
+     * Warning: Calling this function from another extension will fail.
      */
-    function baseURI() external view returns (string memory);
+    function baseURI() public virtual override returns (string memory) {
+        ERC1238State storage erc1238State = ERC1238Storage._getState();
+        string memory base = erc1238State.baseURI;
+
+        return base;
+    }
 
     /**
      * @dev Sets a new URI for all token types, by relying on the token type ID
@@ -30,5 +34,9 @@ interface IBaseURILogic {
      * Because these URIs cannot be meaningfully represented by the {URI} event,
      * this function emits no events.
      */
-    function _setBaseURI(string memory newBaseURI) external;
+    function _setBaseURI(string memory newBaseURI) internal virtual {
+        ERC1238State storage erc1238State = ERC1238Storage._getState();
+
+        erc1238State.baseURI = newBaseURI;
+    }
 }

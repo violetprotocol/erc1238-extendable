@@ -11,12 +11,14 @@ import {
   ERC1238ReceiverMock,
   IBalanceGettersLogic,
   IBurnBaseLogic,
+  IPermissionLogic,
 } from "../../src/types";
 import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - Burning", function () {
   let admin: SignerWithAddress;
   let eoaRecipient1: SignerWithAddress;
+  let signer2: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
   let contractRecipient2: ERC1238ReceiverMock;
 
@@ -27,12 +29,14 @@ describe("Badge - Burning", function () {
   let badgeIBalance: IBalanceGettersLogic;
   let badgeMint: BadgeMintLogic;
   let badgeIBurnBaseLogic: IBurnBaseLogic;
+  let badgeIPermissionLogic: IPermissionLogic;
   let badgeBurn: BurnLogic;
 
   before(async function () {
     const signers = await ethers.getSigners();
     admin = signers[0];
     eoaRecipient1 = signers[1];
+    signer2 = signers[2];
 
     ({
       recipients: { contractRecipient1, contractRecipient2 },
@@ -45,7 +49,9 @@ describe("Badge - Burning", function () {
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
-    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...baseExtensionsAddresses]);
+    badge = <Badge>(
+      await waffle.deployContract(admin, badgeArtifact, [admin.address, baseURI, ...baseExtensionsAddresses])
+    );
 
     const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
     Object.values(additionalExtensions).forEach(async extension => {
@@ -56,6 +62,11 @@ describe("Badge - Burning", function () {
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
     badgeIBurnBaseLogic = <IBurnBaseLogic>await ethers.getContractAt("IBurnBaseLogic", badge.address);
     badgeBurn = <BurnLogic>await ethers.getContractAt("BurnLogic", badge.address);
+    badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
+
+    // Set permissions
+    await badgeIPermissionLogic.setIntermediateController(admin.address);
+    await badgeIPermissionLogic.setController(admin.address);
   });
 
   describe("Burning", () => {
@@ -95,6 +106,18 @@ describe("Badge - Burning", function () {
         );
       });
 
+      it("should revert when burning with an unauthorized address", async () => {
+        const amountToMint = burnAmount.add(1);
+
+        await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
+
+        await expect(
+          badgeBurn.connect(signer2).burn(contractRecipient1.address, tokenId, burnAmount),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
+      });
+
       it("should burn the right amount of tokens", async () => {
         const amountToMint = burnAmount.add(1);
 
@@ -102,7 +125,7 @@ describe("Badge - Burning", function () {
 
         await badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount);
 
-        expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(1);
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(1);
       });
 
       it("should emit a BurnSingle event", async () => {
@@ -147,6 +170,12 @@ describe("Badge - Burning", function () {
         ).to.be.revertedWith("ERC1238: burn amount exceeds balance");
       });
 
+      it("should revert with an unauthorized address", async () => {
+        await expect(
+          badgeBurn.connect(signer2).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
       it("should properly burn tokens", async () => {
         await badgeMint
           .connect(admin)
@@ -155,7 +184,7 @@ describe("Badge - Burning", function () {
         await badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts);
 
         tokenBatchIds.forEach(async (tokenId, i) =>
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(
             mintBatchAmounts[i].sub(burnBatchAmounts[i]),
           ),
         );

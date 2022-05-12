@@ -6,6 +6,7 @@ import "../../utils/AddressMinimal.sol";
 import "./IBadgeMintLogic.sol";
 import "./MintBaseLogic.sol";
 import "../URI/ITokenURISetLogic.sol";
+import "../permission/IPermissionLogic.sol";
 
 contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
     using Address for address;
@@ -20,6 +21,7 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         string calldata uri,
         bytes calldata data
     ) external override {
+        IPermissionLogic(address(this)).revertIfNotController();
         _mintToEOA(to, id, amount, v, r, s, data);
 
         ITokenURISetLogic(address(this))._setTokenURI(id, uri);
@@ -32,6 +34,7 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         string calldata uri,
         bytes calldata data
     ) external override {
+        IPermissionLogic(address(this)).revertIfNotController();
         _mintToContract(to, id, amount, data);
 
         ITokenURISetLogic(address(this))._setTokenURI(id, uri);
@@ -47,6 +50,7 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         string[] calldata uris,
         bytes calldata data
     ) external override {
+        IPermissionLogic(address(this)).revertIfNotController();
         _mintBatchToEOA(to, ids, amounts, v, r, s, data);
 
         ITokenURISetLogic(address(this))._setBatchTokenURI(ids, uris);
@@ -59,6 +63,7 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         string[] calldata uris,
         bytes calldata data
     ) external override {
+        IPermissionLogic(address(this)).revertIfNotController();
         _mintBatchToContract(to, ids, amounts, data);
 
         ITokenURISetLogic(address(this))._setBatchTokenURI(ids, uris);
@@ -71,6 +76,7 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         string[][] calldata uris,
         bytes[] calldata data
     ) external override {
+        IPermissionLogic(address(this)).revertIfNotController();
         require(ids.length == uris.length, "ids and uris length mismatch");
 
         for (uint256 i = 0; i < to.length; i++) {

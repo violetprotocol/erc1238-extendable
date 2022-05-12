@@ -4,14 +4,16 @@ pragma solidity ^0.8.13;
 import "@violetprotocol/extendable/extensions/Extension.sol";
 import "./BurnBaseLogic.sol";
 import "./IBurnLogic.sol";
+import "../permission/PermissionLogic.sol";
 
-// TODO: Update with permissions & URIs
+// TODO: Update with URIs
 contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
     function burn(
         address from,
         uint256 id,
         uint256 amount
     ) public override {
+        IPermissionLogic(address(this)).revertIfNotController();
         _burn(from, id, amount);
     }
 
@@ -20,6 +22,7 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
         uint256[] memory ids,
         uint256[] memory amounts
     ) public override {
+        IPermissionLogic(address(this)).revertIfNotController();
         _burnBatch(from, ids, amounts);
     }
 

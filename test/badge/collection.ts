@@ -12,6 +12,7 @@ import {
   ERC1238ReceiverMock,
   IBalanceGettersLogic,
   ICollectionLogic,
+  IPermissionLogic,
 } from "../../src/types";
 import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
 import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, chainId, makeTestEnv } from "./badgeTestEnvSetup";
@@ -29,6 +30,7 @@ describe("Badge - Collection", function () {
   let badgeMint: BadgeMintLogic;
   let badgeBurn: BurnLogic;
   let badgeCollectionLogic: ICollectionLogic;
+  let badgeIPermissionLogic: IPermissionLogic;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -46,7 +48,9 @@ describe("Badge - Collection", function () {
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
 
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
-    badge = <Badge>await waffle.deployContract(admin, badgeArtifact, [baseURI, ...baseExtensionsAddresses]);
+    badge = <Badge>(
+      await waffle.deployContract(admin, badgeArtifact, [admin.address, baseURI, ...baseExtensionsAddresses])
+    );
 
     const badgeExtend = await ethers.getContractAt("ExtendLogic", badge.address);
     Object.values(additionalExtensions).forEach(async extension => {
@@ -57,6 +61,11 @@ describe("Badge - Collection", function () {
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
     badgeBurn = <BurnLogic>await ethers.getContractAt("BurnLogic", badge.address);
     badgeCollectionLogic = <ICollectionLogic>await ethers.getContractAt("ICollectionLogic", badge.address);
+    badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
+
+    // Set permissions
+    await badgeIPermissionLogic.setIntermediateController(admin.address);
+    await badgeIPermissionLogic.setController(admin.address);
   });
 
   describe("Badge - Collection", () => {
@@ -95,8 +104,10 @@ describe("Badge - Collection", function () {
 
           await badgeMint.mintToContract(contractRecipient1.address, tokenId, NFT_AMOUNT, tokenURI, data);
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(NFT_AMOUNT);
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(NFT_AMOUNT);
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
+            NFT_AMOUNT,
+          );
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(NFT_AMOUNT);
         });
 
         it("should aggregate balances of different NFTs with the same base id", async () => {
@@ -114,11 +125,11 @@ describe("Badge - Collection", function () {
           await badgeMint.mintToContract(contractRecipient1.address, tokenId_0, NFT_AMOUNT, tokenURI, data);
           await badgeMint.mintToContract(contractRecipient1.address, tokenId_1, NFT_AMOUNT, tokenURI, data);
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
             NFT_AMOUNT * 2,
           );
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId_0)).to.eq(NFT_AMOUNT);
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId_1)).to.eq(NFT_AMOUNT);
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId_0)).to.eq(NFT_AMOUNT);
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId_1)).to.eq(NFT_AMOUNT);
         });
       });
 
@@ -134,8 +145,10 @@ describe("Badge - Collection", function () {
 
           await badgeMint.mintToContract(contractRecipient1.address, tokenId, FT_AMOUNT, tokenURI, data);
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(FT_AMOUNT);
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId)).to.eq(FT_AMOUNT);
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
+            FT_AMOUNT,
+          );
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(FT_AMOUNT);
         });
 
         it("should aggregate balances of different FTs with the same base id", async () => {
@@ -157,11 +170,11 @@ describe("Badge - Collection", function () {
           await badgeMint.mintToContract(contractRecipient1.address, tokenId_0, FT_AMOUNT, tokenURI, data);
           await badgeMint.mintToContract(contractRecipient1.address, tokenId_1, FT_AMOUNT_1, tokenURI, data);
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
             FT_AMOUNT + FT_AMOUNT_1,
           );
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId_0)).to.eq(FT_AMOUNT);
-          expect(await badgeIBalance.balanceOf(contractRecipient1.address, tokenId_1)).to.eq(FT_AMOUNT_1);
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId_0)).to.eq(FT_AMOUNT);
+          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId_1)).to.eq(FT_AMOUNT_1);
         });
       });
     });
@@ -211,8 +224,10 @@ describe("Badge - Collection", function () {
             data,
           );
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(NFT_AMOUNT);
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, nftId1)).to.eq(NFT_AMOUNT);
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
+            NFT_AMOUNT,
+          );
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, nftId1)).to.eq(NFT_AMOUNT);
         });
 
         it("should aggregate balances of different NFTs with the same base id", async () => {
@@ -237,9 +252,11 @@ describe("Badge - Collection", function () {
             data,
           );
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(NFT_AMOUNT * 2);
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, nftId1)).to.eq(NFT_AMOUNT);
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, nftId2)).to.eq(NFT_AMOUNT);
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
+            NFT_AMOUNT * 2,
+          );
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, nftId1)).to.eq(NFT_AMOUNT);
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, nftId2)).to.eq(NFT_AMOUNT);
         });
       });
 
@@ -284,8 +301,10 @@ describe("Badge - Collection", function () {
             data,
           );
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(FT_AMOUNT_1);
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, ftId1)).to.eq(FT_AMOUNT_1);
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
+            FT_AMOUNT_1,
+          );
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, ftId1)).to.eq(FT_AMOUNT_1);
         });
 
         it("should aggregate balances of different FTs with the same base id", async () => {
@@ -310,11 +329,11 @@ describe("Badge - Collection", function () {
             data,
           );
 
-          expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
+          expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
             FT_AMOUNT_1 + FT_AMOUNT_2,
           );
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, ftId1)).to.eq(FT_AMOUNT_1);
-          expect(await badgeIBalance.balanceOf(eoaRecipient1.address, ftId2)).to.eq(FT_AMOUNT_2);
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, ftId1)).to.eq(FT_AMOUNT_1);
+          expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, ftId2)).to.eq(FT_AMOUNT_2);
         });
       });
     });
@@ -354,8 +373,14 @@ describe("Badge - Collection", function () {
             .connect(admin)
             .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
 
-          const balanceOfBaseId1 = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_1);
-          const balanceOfBaseId2 = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_2);
+          const balanceOfBaseId1 = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+            contractRecipient1.address,
+            baseId_1,
+          );
+          const balanceOfBaseId2 = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+            contractRecipient1.address,
+            baseId_2,
+          );
 
           expect(balanceOfBaseId1).to.eq(mintBatchAmounts[0].add(mintBatchAmounts[1]));
           expect(balanceOfBaseId2).to.eq(mintBatchAmounts[2].add(mintBatchAmounts[3]));
@@ -382,8 +407,14 @@ describe("Badge - Collection", function () {
             .connect(admin)
             .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
 
-          const balanceOfBaseId1 = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_1);
-          const balanceOfBaseId2 = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_2);
+          const balanceOfBaseId1 = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+            eoaRecipient1.address,
+            baseId_1,
+          );
+          const balanceOfBaseId2 = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+            eoaRecipient1.address,
+            baseId_2,
+          );
 
           expect(balanceOfBaseId1).to.eq(mintBatchAmounts[0].add(mintBatchAmounts[1]));
           expect(balanceOfBaseId2).to.eq(mintBatchAmounts[2].add(mintBatchAmounts[3]));
@@ -413,7 +444,7 @@ describe("Badge - Collection", function () {
 
             await badgeBurn.burn(contractRecipient1.address, tokenId, burnAmount);
 
-            expect(await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
+            expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
               mintAmount.sub(burnAmount),
             );
           });
@@ -448,7 +479,7 @@ describe("Badge - Collection", function () {
 
             await badgeBurn.burn(eoaRecipient1.address, tokenId, burnAmount);
 
-            expect(await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
+            expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
               mintAmount.sub(burnAmount),
             );
           });
@@ -498,8 +529,14 @@ describe("Badge - Collection", function () {
 
             await badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts);
 
-            const baseId1Balance = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_1);
-            const baseId2Balance = await badgeCollectionLogic.balanceFromBaseId(contractRecipient1.address, baseId_2);
+            const baseId1Balance = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+              contractRecipient1.address,
+              baseId_1,
+            );
+            const baseId2Balance = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+              contractRecipient1.address,
+              baseId_2,
+            );
 
             const remainingAmounts = tokenBatchIds.map((_, index) =>
               mintBatchAmounts[index].sub(burnBatchAmounts[index]),
@@ -554,8 +591,14 @@ describe("Badge - Collection", function () {
 
             await badgeBurn.connect(admin).burnBatch(eoaRecipient1.address, tokenBatchIds, burnBatchAmounts);
 
-            const baseId1Balance = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_1);
-            const baseId2Balance = await badgeCollectionLogic.balanceFromBaseId(eoaRecipient1.address, baseId_2);
+            const baseId1Balance = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+              eoaRecipient1.address,
+              baseId_1,
+            );
+            const baseId2Balance = await badgeCollectionLogic.callStatic.balanceFromBaseId(
+              eoaRecipient1.address,
+              baseId_2,
+            );
 
             const remainingAmounts = tokenBatchIds.map((_, index) =>
               mintBatchAmounts[index].sub(burnBatchAmounts[index]),
