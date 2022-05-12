@@ -73,6 +73,7 @@ describe("Badge - Collection", function () {
     const tokenId = toBn("11223344");
     const tokenURI = "tokenURI";
     const burnAmount = toBn("987");
+    const deleteURI = false;
 
     const baseId_1 = toBn("777", 1);
     const baseId_2 = toBn("888", 1);
@@ -442,7 +443,7 @@ describe("Badge - Collection", function () {
 
             await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
-            await badgeBurn.burn(contractRecipient1.address, tokenId, burnAmount);
+            await badgeBurn.burn(contractRecipient1.address, tokenId, burnAmount, deleteURI);
 
             expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(contractRecipient1.address, baseId)).to.eq(
               mintAmount.sub(burnAmount),
@@ -454,7 +455,7 @@ describe("Badge - Collection", function () {
             await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
 
             await expect(
-              badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount),
+              badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI),
             ).to.be.revertedWith("ERC1238: burn amount exceeds base id balance");
           });
         });
@@ -477,7 +478,7 @@ describe("Badge - Collection", function () {
 
             await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
-            await badgeBurn.burn(eoaRecipient1.address, tokenId, burnAmount);
+            await badgeBurn.burn(eoaRecipient1.address, tokenId, burnAmount, deleteURI);
 
             expect(await badgeCollectionLogic.callStatic.balanceFromBaseId(eoaRecipient1.address, baseId)).to.eq(
               mintAmount.sub(burnAmount),
@@ -485,9 +486,9 @@ describe("Badge - Collection", function () {
           });
 
           it("should revert when burning more than available balance", async () => {
-            await expect(badgeBurn.connect(admin).burn(eoaRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
-              "ERC1238: burn amount exceeds base id balance",
-            );
+            await expect(
+              badgeBurn.connect(admin).burn(eoaRecipient1.address, tokenId, burnAmount, deleteURI),
+            ).to.be.revertedWith("ERC1238: burn amount exceeds base id balance");
           });
         });
       });
@@ -527,7 +528,9 @@ describe("Badge - Collection", function () {
               .connect(admin)
               .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
 
-            await badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts);
+            await badgeBurn
+              .connect(admin)
+              .burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI);
 
             const baseId1Balance = await badgeCollectionLogic.callStatic.balanceFromBaseId(
               contractRecipient1.address,
@@ -589,7 +592,7 @@ describe("Badge - Collection", function () {
               .connect(admin)
               .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
 
-            await badgeBurn.connect(admin).burnBatch(eoaRecipient1.address, tokenBatchIds, burnBatchAmounts);
+            await badgeBurn.connect(admin).burnBatch(eoaRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI);
 
             const baseId1Balance = await badgeCollectionLogic.callStatic.balanceFromBaseId(
               eoaRecipient1.address,

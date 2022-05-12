@@ -5,12 +5,14 @@ interface IBurnLogic {
     function burn(
         address from,
         uint256 id,
-        uint256 amount
+        uint256 amount,
+        bool deleteURI
     ) external;
 
     function burnBatch(
         address from,
         uint256[] memory ids,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        bool deleteURI
     ) external;
 }

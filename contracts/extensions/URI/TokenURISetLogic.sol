@@ -11,9 +11,22 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
      * Used for external calls.
      */
-    function setTokenURI(uint256 id, string memory _tokenURI) external {
+    function setTokenURI(uint256 id, string memory _tokenURI) external override {
         IPermissionLogic(address(this)).revertIfNotController();
         _updateTokenURI(id, _tokenURI);
+    }
+
+    /**
+     * @dev Deletes the tokenURI for the tokens of type `id`.
+     * Used for external calls.
+     *
+     * Requirements:
+     *  - A token URI must be set.
+     *
+     */
+    function deleteTokenURI(uint256 id) external override {
+        IPermissionLogic(address(this)).revertIfNotController();
+        _deleteTokenURIPrivate(id);
     }
 
     /**
@@ -21,7 +34,7 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
      * Used for calls internal to the extendable contract.
      * Updating the token URI is skipped if an empty string is passed.
      */
-    function _setTokenURI(uint256 id, string memory _tokenURI) public _internal {
+    function _setTokenURI(uint256 id, string memory _tokenURI) public override _internal {
         if (bytes(_tokenURI).length == 0) return;
 
         _updateTokenURI(id, _tokenURI);
@@ -31,7 +44,7 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
      * @dev [Batched] version of {_setTokenURI}.
      *
      */
-    function _setBatchTokenURI(uint256[] memory ids, string[] memory tokenURIs) public _internal {
+    function _setBatchTokenURI(uint256[] memory ids, string[] memory tokenURIs) public override _internal {
         require(ids.length == tokenURIs.length, "ERC1238Storage: ids and token URIs length mismatch");
 
         ERC1238URIState storage erc1238URIState = ERC1238URIStorage._getState();
@@ -50,14 +63,16 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
 
     /**
      * @dev Deletes the tokenURI for the tokens of type `id`.
-     *
+     * Used for calls internal to the extendable contract.
      * Requirements:
      *  - A token URI must be set.
      *
-     *  Possible improvement:
-     *  - The URI can only be deleted if all tokens of type `id` have been burned.
      */
-    function _deleteTokenURI(uint256 id) public _internal {
+    function _deleteTokenURI(uint256 id) public override _internal {
+        _deleteTokenURIPrivate(id);
+    }
+
+    function _deleteTokenURIPrivate(uint256 id) private {
         ERC1238URIState storage erc1238URIState = ERC1238URIStorage._getState();
 
         if (bytes(erc1238URIState._tokenURIs[id]).length > 0) {
@@ -78,8 +93,10 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
 
     function getInterface() public pure virtual override returns (string memory) {
         return
+            "function setTokenURI(uint256 id, string memory _tokenURI) external;\n"
             "function _setTokenURI(uint256 id, string memory _tokenURI) external;\n"
             "function _setBatchTokenURI(uint256[] memory ids, string[] memory tokenURIs) external;\n"
+            "function deleteTokenURI(uint256 id) external;\n"
             "function _deleteTokenURI(uint256 id) external;\n";
     }
 }

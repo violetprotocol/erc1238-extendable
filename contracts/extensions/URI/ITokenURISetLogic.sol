@@ -10,7 +10,7 @@ interface ITokenURISetLogic {
 
     /**
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.
-     * Visibility: Public.
+     * Visibility: External.
      */
     function setTokenURI(uint256 id, string memory _tokenURI) external;
 
@@ -28,12 +28,21 @@ interface ITokenURISetLogic {
 
     /**
      * @dev Deletes the tokenURI for the tokens of type `id`.
+     * Visibility: External.
      *
      * Requirements:
      *  - A token URI must be set.
      *
-     *  Possible improvement:
-     *  - The URI can only be deleted if all tokens of type `id` have been burned.
+     */
+    function deleteTokenURI(uint256 id) external;
+
+    /**
+     * @dev Deletes the tokenURI for the tokens of type `id`.
+     * Visibility: Internal.
+     *
+     * Requirements:
+     *  - A token URI must be set.
+     *
      */
     function _deleteTokenURI(uint256 id) external;
 }

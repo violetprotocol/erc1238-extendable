@@ -12,6 +12,7 @@ import {
   IBalanceGettersLogic,
   IBurnBaseLogic,
   IPermissionLogic,
+  ITokenURIGetLogic,
 } from "../../src/types";
 import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
 
@@ -31,6 +32,7 @@ describe("Badge - Burning", function () {
   let badgeIBurnBaseLogic: IBurnBaseLogic;
   let badgeIPermissionLogic: IPermissionLogic;
   let badgeBurn: BurnLogic;
+  let badgeITokenURIGetLogic: ITokenURIGetLogic;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -63,6 +65,7 @@ describe("Badge - Burning", function () {
     badgeIBurnBaseLogic = <IBurnBaseLogic>await ethers.getContractAt("IBurnBaseLogic", badge.address);
     badgeBurn = <BurnLogic>await ethers.getContractAt("BurnLogic", badge.address);
     badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
+    badgeITokenURIGetLogic = <ITokenURIGetLogic>await ethers.getContractAt("ITokenURIGetLogic", badge.address);
 
     // Set permissions
     await badgeIPermissionLogic.setIntermediateController(admin.address);
@@ -74,6 +77,7 @@ describe("Badge - Burning", function () {
     const tokenURI = "tokenURI";
     const tokenId = toBn("11223344");
     const burnAmount = toBn("987");
+    const deleteURI = false;
 
     const tokenBatchIds = [toBn("2000"), toBn("2010"), toBn("2020")];
     const tokenBatchURIs = ["tokenUri1", "tokenUri2", "tokenUri3"];
@@ -87,23 +91,23 @@ describe("Badge - Burning", function () {
     describe("burn", () => {
       it("should revert when burning the zero account's token", async () => {
         await expect(
-          badgeBurn.connect(admin).burn(ethers.constants.AddressZero, tokenId, burnAmount),
+          badgeBurn.connect(admin).burn(ethers.constants.AddressZero, tokenId, burnAmount, deleteURI),
         ).to.be.revertedWith("ERC1238: burn from the zero address");
       });
 
       it("should revert when burning a non-existent token id", async () => {
-        await expect(badgeBurn.connect(admin).burn(eoaRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
-          "ERC1238: burn amount exceeds base id balance",
-        );
+        await expect(
+          badgeBurn.connect(admin).burn(eoaRecipient1.address, tokenId, burnAmount, deleteURI),
+        ).to.be.revertedWith("ERC1238: burn amount exceeds base id balance");
       });
 
       it("should revert when burning more than available balance", async () => {
         const amountToMint = burnAmount.sub(1);
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
 
-        await expect(badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount)).to.be.revertedWith(
-          "ERC1238: burn amount exceeds base id balance",
-        );
+        await expect(
+          badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI),
+        ).to.be.revertedWith("ERC1238: burn amount exceeds base id balance");
       });
 
       it("should revert when burning with an unauthorized address", async () => {
@@ -112,7 +116,19 @@ describe("Badge - Burning", function () {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
 
         await expect(
-          badgeBurn.connect(signer2).burn(contractRecipient1.address, tokenId, burnAmount),
+          badgeBurn.connect(signer2).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
+      });
+
+      it("should revert when burning with an unauthorized address", async () => {
+        const amountToMint = burnAmount.add(1);
+
+        await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
+
+        await expect(
+          badgeBurn.connect(signer2).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI),
         ).to.be.revertedWith("Unauthorized: caller is not the controller");
 
         expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
@@ -123,15 +139,34 @@ describe("Badge - Burning", function () {
 
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
 
-        await badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount);
+        await badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI);
 
         expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(1);
+      });
+
+      it("should not delete the tokenURI if deleteURI is false", async () => {
+        await badgeMint.mintToContract(contractRecipient1.address, tokenId, burnAmount, tokenURI, data);
+
+        await badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI);
+
+        expect(await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)).to.eq(tokenURI);
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(0);
+      });
+
+      it("should delete the tokenURI if deleteURI is true", async () => {
+        const deleteURI = true;
+        await badgeMint.mintToContract(contractRecipient1.address, tokenId, burnAmount, tokenURI, data);
+
+        await badgeBurn.connect(admin).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI);
+
+        expect(await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)).to.eq(baseURI);
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(0);
       });
 
       it("should emit a BurnSingle event", async () => {
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, burnAmount, tokenURI, data);
 
-        await expect(badgeBurn.burn(contractRecipient1.address, tokenId, burnAmount))
+        await expect(badgeBurn.burn(contractRecipient1.address, tokenId, burnAmount, deleteURI))
           .to.emit(badgeBurn, "BurnSingle")
           .withArgs(admin.address, contractRecipient1.address, tokenId, burnAmount);
       });
@@ -140,17 +175,21 @@ describe("Badge - Burning", function () {
     describe("burnBatch", () => {
       it("should revert when burning the zero account's token", async () => {
         await expect(
-          badgeBurn.connect(admin).burnBatch(ethers.constants.AddressZero, tokenBatchIds, burnBatchAmounts),
+          badgeBurn.connect(admin).burnBatch(ethers.constants.AddressZero, tokenBatchIds, burnBatchAmounts, deleteURI),
         ).to.be.revertedWith("ERC1238: burn from the zero address");
       });
 
       it("should revert if the length of inputs do not match", async () => {
         await expect(
-          badgeBurn.connect(admin).burnBatch(contractRecipient2.address, tokenBatchIds.slice(1), burnBatchAmounts),
+          badgeBurn
+            .connect(admin)
+            .burnBatch(contractRecipient2.address, tokenBatchIds.slice(1), burnBatchAmounts, deleteURI),
         ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
 
         await expect(
-          badgeBurn.connect(admin).burnBatch(contractRecipient2.address, tokenBatchIds, burnBatchAmounts.slice(1)),
+          badgeBurn
+            .connect(admin)
+            .burnBatch(contractRecipient2.address, tokenBatchIds, burnBatchAmounts.slice(1), deleteURI),
         ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
       });
 
@@ -166,13 +205,13 @@ describe("Badge - Burning", function () {
           );
 
         await expect(
-          badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts),
+          badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI),
         ).to.be.revertedWith("ERC1238: burn amount exceeds balance");
       });
 
       it("should revert with an unauthorized address", async () => {
         await expect(
-          badgeBurn.connect(signer2).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts),
+          badgeBurn.connect(signer2).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI),
         ).to.be.revertedWith("Unauthorized: caller is not the controller");
       });
 
@@ -181,13 +220,46 @@ describe("Badge - Burning", function () {
           .connect(admin)
           .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
 
-        await badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts);
+        await badgeBurn
+          .connect(admin)
+          .burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI);
 
         tokenBatchIds.forEach(async (tokenId, i) =>
           expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(
             mintBatchAmounts[i].sub(burnBatchAmounts[i]),
           ),
         );
+      });
+
+      it("should not delete the tokenURI if deleteURI is false", async () => {
+        await badgeMint
+          .connect(admin)
+          .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+
+        await badgeBurn
+          .connect(admin)
+          .burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI);
+
+        const batchURIs = await Promise.all(
+          tokenBatchIds.map(tokenId => badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
+        );
+        expect(batchURIs).to.eql(tokenBatchURIs);
+      });
+
+      it("should delete the token URIs if deleteURI is true", async () => {
+        const deleteURI = true;
+        await badgeMint
+          .connect(admin)
+          .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+
+        await badgeBurn
+          .connect(admin)
+          .burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI);
+
+        const batchURIs = await Promise.all(
+          tokenBatchIds.map(tokenId => badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
+        );
+        expect(batchURIs).to.eql(Array(tokenBatchIds.length).fill(baseURI));
       });
 
       it("should emit a BurnBatch event", async () => {
@@ -199,7 +271,7 @@ describe("Badge - Burning", function () {
           data,
         );
 
-        await expect(badgeBurn.burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts))
+        await expect(badgeBurn.burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI))
           .to.emit(badgeIBurnBaseLogic, "BurnBatch")
           .withArgs(admin.address, contractRecipient1.address, tokenBatchIds, burnBatchAmounts);
       });

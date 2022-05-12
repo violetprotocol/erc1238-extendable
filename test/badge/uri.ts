@@ -130,5 +130,23 @@ describe("Badge - URIs", function () {
         "external caller not allowed",
       );
     });
+
+    it("should let the controller delete a token URI", async () => {
+      await badgeITokenURISetLogic.deleteTokenURI(tokenId);
+
+      expect(await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)).to.eq(baseURI);
+    });
+
+    it("should only let the controller delete a token URI", async () => {
+      await expect(badgeITokenURISetLogic.connect(eoaRecipient1).deleteTokenURI(tokenId)).to.be.revertedWith(
+        "Unauthorized: caller is not the controller",
+      );
+    });
+
+    it("should revert when calling _deleteTokenURI from an EOA", async () => {
+      await expect(badgeITokenURISetLogic.connect(admin)._deleteTokenURI(tokenId)).to.be.revertedWith(
+        "external caller not allowed",
+      );
+    });
   });
 });
