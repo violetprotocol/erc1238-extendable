@@ -122,6 +122,18 @@ describe("Badge - Burning", function () {
         expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
       });
 
+      it("should revert when burning with an unauthorized address", async () => {
+        const amountToMint = burnAmount.add(1);
+
+        await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
+
+        await expect(
+          badgeBurn.connect(signer2).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI),
+        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
+      });
+
       it("should burn the right amount of tokens", async () => {
         const amountToMint = burnAmount.add(1);
 
