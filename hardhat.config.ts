@@ -9,7 +9,13 @@ import { resolve } from "path";
 import "solidity-coverage";
 
 import "./tasks/accounts";
-import "./tasks/deploy";
+import "./tasks/currentInterface";
+import "./tasks/deploy/deployBadge";
+import "./tasks/deploy/deployExtendable";
+import "./tasks/deploy/deployExtension";
+import "./tasks/extend";
+import "./tasks/extendable";
+import "./tasks/extension";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -85,6 +91,9 @@ const config: HardhatUserConfig = {
         mnemonic,
       },
       chainId: chainIds.hardhat,
+    },
+    local: {
+      url: "http://127.0.0.1:8545/",
     },
     arbitrum: getChainConfig("arbitrum-mainnet"),
     avalanche: getChainConfig("avalanche"),
