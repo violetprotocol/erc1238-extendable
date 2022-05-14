@@ -7,3 +7,5 @@ export const IERC1238 = [
 export const IERC165 = ["supportsInterface(bytes4)"];
 
 export const IERC1155MetadataURI = ["uri(uint256)"];
+
+export const ITokenURIGetLogic = ["tokenURI(uint256 id)"];

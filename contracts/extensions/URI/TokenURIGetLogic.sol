@@ -39,7 +39,7 @@ contract TokenURIGetLogic is Extension, ITokenURIGetLogic, IERC1155MetadataURI {
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {
-        return (type(ITokenURIGetLogic).interfaceId);
+        return (type(IERC1155MetadataURI).interfaceId);
     }
 
     function getInterface() public pure virtual override returns (string memory) {
