@@ -1,7 +1,7 @@
 import { task } from "hardhat/config";
 import { TaskArguments } from "hardhat/types";
 
-import { deploy } from "./helpers";
+import { deploy } from "../helpers";
 
 task("deploy:badge").setAction(async function (taskArguments: TaskArguments, { ethers }) {
   const signers = await ethers.getSigners();

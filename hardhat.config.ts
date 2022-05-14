@@ -10,7 +10,9 @@ import "solidity-coverage";
 
 import "./tasks/accounts";
 import "./tasks/currentInterface";
-import "./tasks/deploy";
+import "./tasks/deploy/deployBadge";
+import "./tasks/deploy/deployExtendable";
+import "./tasks/deploy/deployExtension";
 import "./tasks/extend";
 import "./tasks/extendable";
 import "./tasks/extension";
