@@ -17,6 +17,7 @@ import {
   TokenURIGetLogic,
   TokenURISetLogic,
 } from "../../src/types";
+import { deployerUtil } from "../../src/utils/deployerUtil";
 
 export type BadgeBaseExtensions = {
   extendLogic: ExtendLogic;
@@ -46,10 +47,6 @@ export type TestEnv = {
 
 export const chainId = chainIds.hardhat;
 export const baseURI: string = "baseURI";
-export const deployerUtil = (deployer: SignerWithAddress) => async (artifactName: string) => {
-  const artifact: Artifact = await artifacts.readArtifact(artifactName);
-  return await waffle.deployContract(deployer, artifact);
-};
 
 export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestEnv> => {
   // Deploy mock contract recipients
