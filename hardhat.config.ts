@@ -14,8 +14,6 @@ import "./tasks/deploy/deployBadge";
 import "./tasks/deploy/deployExtendable";
 import "./tasks/deploy/deployExtension";
 import "./tasks/extend";
-import "./tasks/extendable";
-import "./tasks/extension";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 

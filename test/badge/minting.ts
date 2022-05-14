@@ -10,7 +10,7 @@ import {
   BadgeMintLogic,
   ERC1238ReceiverMock,
   IBalanceGettersLogic,
-  IMintBaseLogic,
+  IERC1238,
   IPermissionLogic,
   ITokenURIGetLogic,
   ITokenURISetLogic,
@@ -29,9 +29,9 @@ describe("Badge - Minting", function () {
   let additionalExtensions: BadgeAdditionalExtensions;
 
   let badge: Badge;
+  let badgeERC1238: IERC1238;
   let badgeIBalance: IBalanceGettersLogic;
   let badgeMint: BadgeMintLogic;
-  let badgeIMintBaseLogic: IMintBaseLogic;
   let badgeITokenURIGetLogic: ITokenURIGetLogic;
   let badgeITokenURISetLogic: ITokenURISetLogic;
   let badgeIPermissionLogic: IPermissionLogic;
@@ -64,7 +64,7 @@ describe("Badge - Minting", function () {
 
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
-    badgeIMintBaseLogic = await ethers.getContractAt("IMintBaseLogic", badge.address);
+    badgeERC1238 = await ethers.getContractAt("IERC1238", badge.address);
     badgeITokenURIGetLogic = <ITokenURIGetLogic>await ethers.getContractAt("ITokenURIGetLogic", badge.address);
     badgeITokenURISetLogic = <ITokenURISetLogic>await ethers.getContractAt("ITokenURISetLogic", badge.address);
     badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
@@ -126,6 +126,17 @@ describe("Badge - Minting", function () {
         expect(balance).to.eq(mintAmount);
       });
 
+      it("should return the right balance from an external contract call", async () => {
+        const factory = await ethers.getContractFactory("BadgeCallerMock");
+        const badgeCallerMock = await factory.deploy(badge.address);
+
+        await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
+
+        const balance = await badgeCallerMock.callStatic.balanceOf(eoaRecipient1.address, tokenId);
+
+        expect(balance).to.eq(mintAmount);
+      });
+
       it("should set the token URI", async () => {
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
 
@@ -164,7 +175,7 @@ describe("Badge - Minting", function () {
 
       it("should emit a MintSingle event", async () => {
         await expect(badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data))
-          .to.emit(badgeIMintBaseLogic, "MintSingle")
+          .to.emit(badgeERC1238, "MintSingle")
           .withArgs(admin.address, eoaRecipient1.address, tokenId, mintAmount);
       });
     });
@@ -330,7 +341,7 @@ describe("Badge - Minting", function () {
             data,
           ),
         )
-          .to.emit(badgeMint, "MintBatch")
+          .to.emit(badgeERC1238, "MintBatch")
           .withArgs(admin.address, eoaRecipient1.address, tokenBatchIds, mintBatchAmounts);
       });
     });
@@ -414,7 +425,7 @@ describe("Badge - Minting", function () {
             data,
           ),
         )
-          .to.emit(badgeMint, "MintBatch")
+          .to.emit(badgeERC1238, "MintBatch")
           .withArgs(admin.address, contractRecipient1.address, tokenBatchIds, mintBatchAmounts);
       });
     });
@@ -504,9 +515,9 @@ describe("Badge - Minting", function () {
 
         const tx = badgeMint.connect(admin).mintBundle(to, ids, amounts, uris, data);
 
-        await expect(tx).to.emit(badgeIMintBaseLogic, "MintBatch").withArgs(admin.address, to[0], ids[0], amounts[0]);
-        await expect(tx).to.emit(badgeIMintBaseLogic, "MintBatch").withArgs(admin.address, to[1], ids[1], amounts[1]);
-        await expect(tx).to.emit(badgeIMintBaseLogic, "MintBatch").withArgs(admin.address, to[2], ids[2], amounts[2]);
+        await expect(tx).to.emit(badgeERC1238, "MintBatch").withArgs(admin.address, to[0], ids[0], amounts[0]);
+        await expect(tx).to.emit(badgeERC1238, "MintBatch").withArgs(admin.address, to[1], ids[1], amounts[1]);
+        await expect(tx).to.emit(badgeERC1238, "MintBatch").withArgs(admin.address, to[2], ids[2], amounts[2]);
       });
 
       it("should emit URI events", async () => {

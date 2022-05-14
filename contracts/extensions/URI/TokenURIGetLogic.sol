@@ -5,19 +5,32 @@ import "@violetprotocol/extendable/extensions/Extension.sol";
 import { ERC1238URIState, ERC1238URIStorage } from "../../storage/ERC1238URIStorage.sol";
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./ITokenURIGetLogic.sol";
+import "../../interfaces/IERC1155MetadataURI.sol";
 
-contract TokenURIGetLogic is Extension, ITokenURIGetLogic {
+contract TokenURIGetLogic is Extension, ITokenURIGetLogic, IERC1155MetadataURI {
     /**
      * @dev See {IERC1238URIStorage-tokenURI}.
      */
-    function tokenURI(uint256 id) public virtual override returns (string memory) {
+    function tokenURI(uint256 id) public override(ITokenURIGetLogic) returns (string memory) {
+        return _tokenURI(id);
+    }
+
+    /**
+     * @dev Returns the uri of a certain token id.
+     * Provides backwards-compatibility with the IERC1155MetadataURI interface.
+     */
+    function uri(uint256 id) public view override(IERC1155MetadataURI) returns (string memory) {
+        return _tokenURI(id);
+    }
+
+    function _tokenURI(uint256 id) private view returns (string memory) {
         ERC1238URIState storage erc1238URIState = ERC1238URIStorage._getState();
 
-        string memory _tokenURI = erc1238URIState._tokenURIs[id];
+        string memory currentURI = erc1238URIState._tokenURIs[id];
 
         // Returns the token URI if there is a specific one set that overrides the base URI
         if (bytes(erc1238URIState._tokenURIs[id]).length > 0) {
-            return _tokenURI;
+            return currentURI;
         }
 
         ERC1238State storage erc1238State = ERC1238Storage._getState();
