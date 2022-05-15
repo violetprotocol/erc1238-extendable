@@ -122,19 +122,17 @@ describe("Badge - Burning", function () {
         expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
       });
 
-      it("should revert when burning with an unauthorized address", async () => {
+      it("should burn the right amount of tokens when called by the token owner", async () => {
         const amountToMint = burnAmount.add(1);
 
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
 
-        await expect(
-          badgeBurn.connect(signer2).burn(contractRecipient1.address, tokenId, burnAmount, deleteURI),
-        ).to.be.revertedWith("Unauthorized: caller is not the controller");
+        await contractRecipient1.burn(badge.address, tokenId, burnAmount, deleteURI);
 
-        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(amountToMint);
+        expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(1);
       });
 
-      it("should burn the right amount of tokens", async () => {
+      it("should burn the right amount of tokens when called by the controller", async () => {
         const amountToMint = burnAmount.add(1);
 
         await badgeMint.mintToContract(contractRecipient1.address, tokenId, amountToMint, tokenURI, data);
@@ -215,7 +213,7 @@ describe("Badge - Burning", function () {
         ).to.be.revertedWith("Unauthorized: caller is not the controller");
       });
 
-      it("should properly burn tokens", async () => {
+      it("should properly burn tokens by the admin", async () => {
         await badgeMint
           .connect(admin)
           .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
@@ -224,11 +222,35 @@ describe("Badge - Burning", function () {
           .connect(admin)
           .burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI);
 
-        tokenBatchIds.forEach(async (tokenId, i) =>
-          expect(await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId)).to.eq(
-            mintBatchAmounts[i].sub(burnBatchAmounts[i]),
+        const balances = await Promise.all(
+          tokenBatchIds.map(
+            async tokenId => await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId),
           ),
         );
+
+        balances.forEach((bal, i) => expect(bal).to.eq(mintBatchAmounts[i].sub(burnBatchAmounts[i])));
+      });
+
+      it("should properly burn tokens by the owner", async () => {
+        await badgeMint
+          .connect(admin)
+          .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+
+        await contractRecipient1.burnBatch(
+          badge.address,
+          contractRecipient1.address,
+          tokenBatchIds,
+          burnBatchAmounts,
+          deleteURI,
+        );
+
+        const balances = await Promise.all(
+          tokenBatchIds.map(
+            async tokenId => await badgeIBalance.callStatic.balanceOf(contractRecipient1.address, tokenId),
+          ),
+        );
+
+        balances.forEach((bal, i) => expect(bal).to.eq(mintBatchAmounts[i].sub(burnBatchAmounts[i])));
       });
 
       it("should not delete the tokenURI if deleteURI is false", async () => {
