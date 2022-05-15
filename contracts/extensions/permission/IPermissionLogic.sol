@@ -45,6 +45,8 @@ interface IPermissionLogic {
      *
      * Requirements:
      * - Can only be set by the current root controller.
+     *
+     * Emits a {NewRootController} event.
      */
     function setRootController(address newRootController) external;
 
@@ -53,6 +55,8 @@ interface IPermissionLogic {
      *
      * Requirements:
      * - Can only be set by the root controller.
+     *
+     * Emits a {NewIntermediateController} event.
      */
     function setIntermediateController(address newIntermediateController) external;
 
@@ -61,6 +65,8 @@ interface IPermissionLogic {
      *
      * Requirements:
      * - Can only be set by the intermediate controller.
+     *
+     * Emits a {NewController} event.
      */
     function setController(address newController) external;
 }
