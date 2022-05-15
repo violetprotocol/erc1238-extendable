@@ -6,8 +6,10 @@ import "@violetprotocol/extendable/extensions/extend/IExtendLogic.sol";
 import { ERC1238State, ERC1238Storage } from "../storage/ERC1238Storage.sol";
 import { ERC1238ApprovalState, ERC1238ApprovalStorage } from "../storage/ERC1238ApprovalStorage.sol";
 import { PermissionState, PermissionStorage } from "../storage/PermissionStorage.sol";
+import { IERC1155MetadataURI } from "../interfaces/IERC1155MetadataURI.sol";
+import { IERC1238 } from "../interfaces/IERC1238.sol";
 
-contract Badge is Extendable {
+contract Badge is Extendable, ERC165 {
     constructor(
         address rootController,
         string memory baseURI_,
@@ -46,5 +48,12 @@ contract Badge is Extendable {
 
         ERC1238ApprovalState storage erc1238ApprovalState = ERC1238ApprovalStorage._getState();
         erc1238ApprovalState.domainTypeHash = bytes32(data);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == type(IERC165).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            interfaceId == type(IERC1238).interfaceId;
     }
 }

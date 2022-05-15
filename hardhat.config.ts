@@ -14,8 +14,6 @@ import "./tasks/deploy/deployBadge";
 import "./tasks/deploy/deployExtendable";
 import "./tasks/deploy/deployExtension";
 import "./tasks/extend";
-import "./tasks/extendable";
-import "./tasks/extension";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -30,7 +28,7 @@ if (!infuraApiKey) {
   throw new Error("Please set your INFURA_API_KEY in a .env file");
 }
 
-const chainIds = {
+export const chainIds = {
   "arbitrum-mainnet": 42161,
   avalanche: 43114,
   bsc: 56,

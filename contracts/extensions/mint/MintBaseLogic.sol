@@ -111,33 +111,6 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
     }
 
     /**
-     * @dev Mints a bundle, which can be viewed as minting several batches
-     * to an array of addresses in one transaction.
-     *
-     * Requirements:
-     * - `to` can be a combination of smart contract addresses and EOAs.
-     * - If `to` is not a contract, an EIP712 signature from `to` as defined by ERC1238Approval
-     * must be passed at the right index in `data`.
-     *
-     * Emits multiple {MintBatch} events.
-     */
-    function _mintBundle(
-        address[] memory to,
-        uint256[][] memory ids,
-        uint256[][] memory amounts,
-        bytes[] memory data
-    ) internal virtual {
-        for (uint256 i = 0; i < to.length; i++) {
-            if (to[i].isContract()) {
-                _mintBatchToContract(to[i], ids[i], amounts[i], data[i]);
-            } else {
-                (bytes32 r, bytes32 s, uint8 v) = splitSignature(data[i]);
-                _mintBatchToEOA(to[i], ids[i], amounts[i], v, r, s, data[i]);
-            }
-        }
-    }
-
-    /**
      * @dev Creates `amount` tokens of token type `id`, and assigns them to `to`.
      *
      * Emits a {MintSingle} event.

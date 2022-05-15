@@ -9,10 +9,12 @@ import {
   BadgeBaseURILogic,
   BadgeMintLogic,
   ERC1238ReceiverMock,
+  IERC1155MetadataURI,
   IPermissionLogic,
   ITokenURIGetLogic,
   ITokenURISetLogic,
 } from "../../src/types";
+import { shouldSupportInterfaces } from "../utils";
 import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, makeTestEnv } from "./badgeTestEnvSetup";
 
 describe("Badge - URIs", function () {
@@ -20,7 +22,6 @@ describe("Badge - URIs", function () {
   let eoaRecipient1: SignerWithAddress;
   let signer2: SignerWithAddress;
   let contractRecipient1: ERC1238ReceiverMock;
-  let contractRecipient2: ERC1238ReceiverMock;
 
   let baseExtensions: BadgeBaseExtensions;
   let additionalExtensions: BadgeAdditionalExtensions;
@@ -31,6 +32,7 @@ describe("Badge - URIs", function () {
   let badgeIPermissionLogic: IPermissionLogic;
   let badgeITokenURIGetLogic: ITokenURIGetLogic;
   let badgeITokenURISetLogic: ITokenURISetLogic;
+  let badgeIERC1155MetadataURI: IERC1155MetadataURI;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -39,7 +41,7 @@ describe("Badge - URIs", function () {
     signer2 = signers[1];
 
     ({
-      recipients: { contractRecipient1, contractRecipient2 },
+      recipients: { contractRecipient1 },
       baseExtensions,
       additionalExtensions,
     } = await makeTestEnv(admin));
@@ -47,7 +49,6 @@ describe("Badge - URIs", function () {
 
   beforeEach(async function () {
     const badgeArtifact: Artifact = await artifacts.readArtifact("Badge");
-
     const baseExtensionsAddresses = Object.values(baseExtensions).map(extension => extension.address);
     badge = <Badge>(
       await waffle.deployContract(admin, badgeArtifact, [admin.address, baseURI, ...baseExtensionsAddresses])
@@ -63,10 +64,19 @@ describe("Badge - URIs", function () {
     badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
     badgeITokenURIGetLogic = <ITokenURIGetLogic>await ethers.getContractAt("ITokenURIGetLogic", badge.address);
     badgeITokenURISetLogic = <ITokenURISetLogic>await ethers.getContractAt("ITokenURISetLogic", badge.address);
+    badgeIERC1155MetadataURI = <IERC1155MetadataURI>await ethers.getContractAt("IERC1155MetadataURI", badge.address);
 
     // Set permissions
     await badgeIPermissionLogic.setIntermediateController(admin.address);
     await badgeIPermissionLogic.setController(admin.address);
+  });
+
+  describe("ERC165", () => {
+    it("should support the right interfaces", async () => {
+      const supported = await shouldSupportInterfaces(badge, ["IERC165", "IERC1238", "IERC1155MetadataURI"]);
+
+      expect(supported).to.eq(true);
+    });
   });
 
   describe("Base URI", () => {
@@ -107,6 +117,17 @@ describe("Badge - URIs", function () {
       await badgeMint.mintToContract(contractRecipient1.address, tokenId, mintAmount, tokenURI, data);
 
       expect(await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)).to.eq(tokenURI);
+    });
+
+    it("should return a token URI with the ERC155Metadata interface", async () => {
+      expect(await badgeIERC1155MetadataURI.uri(tokenId)).to.eq(tokenURI);
+    });
+
+    it("should return a token URI via a contract", async () => {
+      const factory = await ethers.getContractFactory("BadgeCallerMock");
+      const badgeCallerMock = await factory.deploy(badge.address);
+
+      expect(await badgeCallerMock.callStatic.tokenURI(tokenId)).to.eq(tokenURI);
     });
 
     it("should let the controller update a token URI", async () => {
