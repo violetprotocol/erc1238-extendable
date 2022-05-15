@@ -4,18 +4,25 @@ pragma solidity ^0.8.13;
 import "@violetprotocol/extendable/extensions/Extension.sol";
 import "./BurnBaseLogic.sol";
 import "./IBurnLogic.sol";
-import "../permission/PermissionLogic.sol";
+import "../permission/IPermissionLogic.sol";
 import "../hooks/generic/IBeforeBurnLogic.sol";
 import "../URI/ITokenURISetLogic.sol";
 
+/**
+ * @dev Internal extension to handle burning tokens which inherits BurnBaseLogic and adds custom logic around
+ * permissions and the option to delete token URIs when burning.
+ */
 contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
+    /**
+     * @dev See {IBurnLogic-burn}.
+     */
     function burn(
         address from,
         uint256 id,
         uint256 amount,
         bool deleteURI
     ) public override {
-        IPermissionLogic(address(this)).revertIfNotController();
+        IPermissionLogic(address(this)).revertIfNotControllerOrAuthorized(from);
 
         if (deleteURI) {
             _burnAndDeleteURI(from, id, amount);
@@ -24,13 +31,16 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
         }
     }
 
+    /**
+     * @dev See {IBurnLogic-burnBatch}.
+     */
     function burnBatch(
         address from,
         uint256[] memory ids,
         uint256[] memory amounts,
         bool deleteURI
     ) public override {
-        IPermissionLogic(address(this)).revertIfNotController();
+        IPermissionLogic(address(this)).revertIfNotControllerOrAuthorized(from);
 
         if (deleteURI) {
             _burnBatchAndDeleteURIs(from, ids, amounts);
@@ -43,8 +53,10 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
      * @dev Destroys `amount` of tokens with id `id` owned by `from` and deletes the associated URI.
      *
      * Requirements:
-     *  - A token URI must be set.
-     *  - All tokens of this type must have been burned.
+     * - `from` must own at least `amount` of tokens with id `id`.
+     * - A token URI must be set.
+     *
+     * Emits a {BurnSingle} event.
      */
     function _burnAndDeleteURI(
         address from,
@@ -60,7 +72,7 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
      * @dev [Batched] version of {_burnAndDeleteURI}.
      *
      * Requirements:
-     *
+     * - `from` cannot be the zero address
      * - `ids` and `amounts` must have the same length.
      * - For each id the balance of `from` must be at least the amount wished to be burnt.
      *

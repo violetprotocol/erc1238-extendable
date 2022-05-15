@@ -5,12 +5,16 @@ import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "../hooks/generic/IBeforeBurnLogic.sol";
 import "./IBurnBaseLogic.sol";
 
+/**
+ * @dev Base logic for burning ERC1238 tokens, either from a single id (_burn) or
+ * as a batch of multiple ids (_burnBatch).
+ * This contract is meant to be inherited.
+ */
 contract BurnBaseLogic is IBurnBaseLogic {
     /**
      * @dev Destroys `amount` tokens of token type `id` from `from`
      *
      * Requirements:
-     *
      * - `from` cannot be the zero address.
      * - `from` must have at least `amount` tokens of token type `id`.
      *
@@ -42,7 +46,6 @@ contract BurnBaseLogic is IBurnBaseLogic {
      * @dev [Batched] version of {_burn}.
      *
      * Requirements:
-     *
      * - `ids` and `amounts` must have the same length.
      *
      * Emits a {BurnBatch} event.
