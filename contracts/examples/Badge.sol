@@ -19,6 +19,7 @@ contract Badge is Extendable, ERC165 {
         address mintLogic,
         address burnLogic
     ) Extendable(extendLogic) {
+        require(rootController != address(0x0), "Invalid address for root controller");
         PermissionState storage permissionState = PermissionStorage._getState();
         permissionState.rootController = rootController;
 
