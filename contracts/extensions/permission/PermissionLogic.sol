@@ -5,8 +5,15 @@ import "@violetprotocol/extendable/extensions/Extension.sol";
 import { PermissionState, PermissionStorage } from "../../storage/PermissionStorage.sol";
 import "./IPermissionLogic.sol";
 
-// TODO: Add events
+/**
+ * @dev Extension which implements {IPermissionLogic} and is used in other extensions
+ * to gate execution of some code.
+ * Methods are not marked as view to allow to be called by other extensions.
+ */
 contract PermissionLogic is Extension, IPermissionLogic {
+    /**
+     * @dev See {IPermissionLogic-revertIfNotController}.
+     */
     function revertIfNotController() public override {
         PermissionState storage permissionState = PermissionStorage._getState();
         address controller = permissionState.controller;
@@ -16,6 +23,9 @@ contract PermissionLogic is Extension, IPermissionLogic {
         );
     }
 
+    /**
+     * @dev See {IPermissionLogic-revertIfNotControllerOrAuthorized}.
+     */
     function revertIfNotControllerOrAuthorized(address authorizedAccount) public override {
         PermissionState storage permissionState = PermissionStorage._getState();
         address controller = permissionState.controller;
@@ -28,21 +38,33 @@ contract PermissionLogic is Extension, IPermissionLogic {
         );
     }
 
+    /**
+     * @dev See {IPermissionLogic-getRootController}.
+     */
     function getRootController() public override returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.rootController;
     }
 
+    /**
+     * @dev See {IPermissionLogic-getIntermediateController}.
+     */
     function getIntermediateController() public override returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.intermediateController;
     }
 
+    /**
+     * @dev See {IPermissionLogic-getController}.
+     */
     function getController() public override returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.controller;
     }
 
+    /**
+     * @dev See {IPermissionLogic-setRootController}.
+     */
     function setRootController(address newRootController) external override {
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.rootController, "Unauthorized");
@@ -50,6 +72,9 @@ contract PermissionLogic is Extension, IPermissionLogic {
         permissionState.rootController = newRootController;
     }
 
+    /**
+     * @dev See {IPermissionLogic-setIntermediateController}.
+     */
     function setIntermediateController(address newIntermediateController) external override {
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.rootController, "Unauthorized");
@@ -57,6 +82,9 @@ contract PermissionLogic is Extension, IPermissionLogic {
         permissionState.intermediateController = newIntermediateController;
     }
 
+    /**
+     * @dev See {IPermissionLogic-setController}.
+     */
     function setController(address newController) external override {
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.intermediateController, "Unauthorized");
