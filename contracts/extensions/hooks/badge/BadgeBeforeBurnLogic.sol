@@ -5,13 +5,15 @@ import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { IBeforeBurnLogic } from "../generic/IBeforeBurnLogic.sol";
 import { ICollectionLogic } from "../../../extensions/collection/ICollectionLogic.sol";
 
+/**
+ * @dev Internal Extension that implements {IBeforeBurnLogic} and
+ * defines custom logic for what happens before tokens are burnt.
+ */
 contract BadgeBeforeBurnLogic is IBeforeBurnLogic, InternalExtension {
     /**
      * @dev Hook that is called before an `amount` of tokens are burned.
-     *
-     * Calling conditions:
-     * - `burner` and `from` cannot be the zero address
-     *
+     * It calls the Collection logic to decrease the base id balance of
+     * the token owner.
      */
     function _beforeBurn(
         address,

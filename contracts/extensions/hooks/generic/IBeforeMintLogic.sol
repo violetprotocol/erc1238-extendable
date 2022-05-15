@@ -5,9 +5,6 @@ interface IBeforeMintLogic {
     /**
      * @dev Hook that is called before an `amount` of tokens are minted.
      *
-     * Calling conditions:
-     * - `minter` and `to` cannot be the zero address
-     *
      */
     function _beforeMint(
         address minter,

@@ -4,13 +4,12 @@ pragma solidity ^0.8.13;
 import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { IBeforeMintLogic } from "./IBeforeMintLogic.sol";
 
+/**
+ * @dev Internal Extension that implements {IBeforeMintLogic}.
+ */
 contract BeforeMintLogic is IBeforeMintLogic, InternalExtension {
     /**
-     * @dev Hook that is called before an `amount` of tokens are minted.
-     *
-     * Calling conditions:
-     * - `minter` and `to` cannot be the zero address
-     *
+     * @dev See {IBeforeMintLogic-_beforeMint}.
      */
     function _beforeMint(
         address minter,
