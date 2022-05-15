@@ -7,7 +7,7 @@ import "./IPermissionLogic.sol";
 
 // TODO: Add events
 contract PermissionLogic is Extension, IPermissionLogic {
-    function revertIfNotController() public {
+    function revertIfNotController() public override {
         PermissionState storage permissionState = PermissionStorage._getState();
         address controller = permissionState.controller;
         require(
@@ -16,36 +16,48 @@ contract PermissionLogic is Extension, IPermissionLogic {
         );
     }
 
-    function getRootController() public returns (address) {
+    function revertIfNotControllerOrAuthorized(address authorizedAccount) public override {
+        PermissionState storage permissionState = PermissionStorage._getState();
+        address controller = permissionState.controller;
+        require(
+            _lastExternalCaller() == controller ||
+                msg.sender == controller ||
+                _lastExternalCaller() == authorizedAccount ||
+                msg.sender == authorizedAccount,
+            "Unauthorized: caller is not the controller or authorized"
+        );
+    }
+
+    function getRootController() public override returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.rootController;
     }
 
-    function getIntermediateController() public returns (address) {
+    function getIntermediateController() public override returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.intermediateController;
     }
 
-    function getController() public returns (address) {
+    function getController() public override returns (address) {
         PermissionState storage permissionState = PermissionStorage._getState();
         return permissionState.controller;
     }
 
-    function setRootController(address newRootController) external {
+    function setRootController(address newRootController) external override {
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.rootController, "Unauthorized");
 
         permissionState.rootController = newRootController;
     }
 
-    function setIntermediateController(address newIntermediateController) external {
+    function setIntermediateController(address newIntermediateController) external override {
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.rootController, "Unauthorized");
 
         permissionState.intermediateController = newIntermediateController;
     }
 
-    function setController(address newController) external {
+    function setController(address newController) external override {
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.intermediateController, "Unauthorized");
 
@@ -59,6 +71,7 @@ contract PermissionLogic is Extension, IPermissionLogic {
     function getInterface() public pure virtual override returns (string memory) {
         return
             "function revertIfNotController() external;\n"
+            "function revertIfNotControllerOrAuthorized(address) external;\n"
             "function getRootController() external returns (address);\n"
             "function getIntermediateController() external returns (address);\n"
             "function getController() external returns (address);\n"

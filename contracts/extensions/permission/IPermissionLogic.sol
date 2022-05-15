@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 interface IPermissionLogic {
     function revertIfNotController() external;
 
+    function revertIfNotControllerOrAuthorized(address authorizedAccount) external;
+
     function getRootController() external returns (address);
 
     function getIntermediateController() external returns (address);
