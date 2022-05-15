@@ -1,6 +1,10 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+/**
+ * @dev Exposes methods to return the balance of token owners for
+ * non-transferable tokens (ERC1238).
+ */
 interface IBalanceGettersLogic {
     /**
      * @dev Returns the amount of tokens of token type `id` owned by `account`.
