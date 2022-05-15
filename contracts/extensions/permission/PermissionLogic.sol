@@ -66,30 +66,42 @@ contract PermissionLogic is Extension, IPermissionLogic {
      * @dev See {IPermissionLogic-setRootController}.
      */
     function setRootController(address newRootController) external override {
+        require(newRootController != address(0x0), "Invalid newRootController address");
+
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.rootController, "Unauthorized");
 
         permissionState.rootController = newRootController;
+
+        emit NewRootController(newRootController);
     }
 
     /**
      * @dev See {IPermissionLogic-setIntermediateController}.
      */
     function setIntermediateController(address newIntermediateController) external override {
+        require(newIntermediateController != address(0x0), "Invalid newRootController address");
+
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.rootController, "Unauthorized");
 
         permissionState.intermediateController = newIntermediateController;
+
+        emit NewIntermediateController(newIntermediateController);
     }
 
     /**
      * @dev See {IPermissionLogic-setController}.
      */
     function setController(address newController) external override {
+        require(newController != address(0x0), "Invalid newRootController address");
+
         PermissionState storage permissionState = PermissionStorage._getState();
         require(msg.sender == permissionState.intermediateController, "Unauthorized");
 
         permissionState.controller = newController;
+
+        emit NewController(newController);
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {

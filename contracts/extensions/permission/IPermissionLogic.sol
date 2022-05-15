@@ -3,6 +3,19 @@ pragma solidity ^0.8.13;
 
 interface IPermissionLogic {
     /**
+     * @dev Emitted when the root controller changes.
+     */
+    event NewRootController(address);
+    /**
+     * @dev Emitted when the intermediate controller changes.
+     */
+    event NewIntermediateController(address);
+    /**
+     * @dev Emitted when the controller changes.
+     */
+    event NewController(address);
+
+    /**
      * @dev Checks if the current caller is the controller and reverts if it's not.
      */
     function revertIfNotController() external;
@@ -13,12 +26,12 @@ interface IPermissionLogic {
     function revertIfNotControllerOrAuthorized(address authorizedAccount) external;
 
     /**
-     * @dev Returns the current rootController.
+     * @dev Returns the current root controller.
      */
     function getRootController() external returns (address);
 
     /**
-     * @dev Returns the current intermediateController.
+     * @dev Returns the current intermediate controller.
      */
     function getIntermediateController() external returns (address);
 
@@ -28,18 +41,18 @@ interface IPermissionLogic {
     function getController() external returns (address);
 
     /**
-     * @dev Updates the rootController.
+     * @dev Updates the root controller.
      *
      * Requirements:
-     * - Can only be set by the current rootController.
+     * - Can only be set by the current root controller.
      */
     function setRootController(address newRootController) external;
 
     /**
-     * @dev Sets the intermediateController.
+     * @dev Sets the intermediate controller.
      *
      * Requirements:
-     * - Can only be set by the rootController.
+     * - Can only be set by the root controller.
      */
     function setIntermediateController(address newIntermediateController) external;
 
@@ -47,7 +60,7 @@ interface IPermissionLogic {
      * @dev Sets the controller.
      *
      * Requirements:
-     * - Can only be set by the intermediateController.
+     * - Can only be set by the intermediate controller.
      */
     function setController(address newController) external;
 }
