@@ -7,13 +7,23 @@ import "../permission/IPermissionLogic.sol";
 import "./BaseURILogic.sol";
 import "./IBadgeBaseURILogic.sol";
 
+/**
+ * @dev Internal extension to handle a base URI which inherits BaseURILogic and adds custom permissioning
+ * for updating the base URI.
+ */
 contract BadgeBaseURILogic is InternalExtension, BaseURILogic, IBadgeBaseURILogic {
+    /**
+     * @dev See {IBadgeBaseURILogic-setBaseURI}.
+     */
     function setBaseURI(string calldata newBaseURI) external override {
         IPermissionLogic(address(this)).revertIfNotController();
 
         _setBaseURI(newBaseURI);
     }
 
+    /**
+     * @dev See {IBadgeBaseURILogic-baseURI}.
+     */
     function baseURI() public override(BaseURILogic, IBadgeBaseURILogic) returns (string memory) {
         return super.baseURI();
     }
