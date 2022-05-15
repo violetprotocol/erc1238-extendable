@@ -8,6 +8,13 @@ import "../hooks/generic/IBeforeMintLogic.sol";
 import "./IMintBaseLogic.sol";
 import "../../utils/AddressMinimal.sol";
 
+/**
+ * @dev Base logic for minting ERC1238 tokens, either to an EOA or a contract,
+ * and provides internal methods for minting and their batched variants.
+ * This contract is meant to be inherited.
+ * It relies on ERC1238 Approval to verify EOA signatures and the IERC1238Receiver
+ * interface for contracts as a mechanism to get consent from the recipient.
+ */
 contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
     using Address for address;
 

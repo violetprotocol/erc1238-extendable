@@ -11,14 +11,4 @@ interface IMintBaseLogic {
      * @dev Equivalent to multiple {MintSingle} events, where `minter` and `to` is the same for all token types
      */
     event MintBatch(address indexed minter, address indexed to, uint256[] ids, uint256[] amounts);
-
-    /**
-     * @dev Emitted when `amount` tokens of token type `id` owned by `owner` are burned by `burner`.
-     */
-    event BurnSingle(address indexed burner, address indexed owner, uint256 indexed id, uint256 amount);
-
-    /**
-     * @dev Equivalent to multiple {BurnSingle} events, where `owner` and `burner` is the same for all token types
-     */
-    event BurnBatch(address indexed burner, address indexed owner, uint256[] ids, uint256[] amounts);
 }

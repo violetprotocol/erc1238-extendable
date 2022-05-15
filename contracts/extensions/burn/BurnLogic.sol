@@ -9,7 +9,7 @@ import "../hooks/generic/IBeforeBurnLogic.sol";
 import "../URI/ITokenURISetLogic.sol";
 
 /**
- * @dev Internal extension to handle burning tokens which inherits BurnBaseLogic and adds custom logic around
+ * @dev Extension to handle burning tokens which inherits BurnBaseLogic and adds custom logic around
  * permissions and the option to delete token URIs when burning.
  */
 contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
