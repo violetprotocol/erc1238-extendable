@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/InternalExtension.sol";
-import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "../permission/IPermissionLogic.sol";
 import "./BaseURILogic.sol";
 import "./IBadgeBaseURILogic.sol";

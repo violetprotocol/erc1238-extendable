@@ -1,6 +1,57 @@
-# Solidity Template
+# ERC1238 Implementation as Extendable
 
-My favorite setup for writing Solidity smart contracts.
+## Overview
+
+See the original EIP-1238: https://github.com/ethereum/EIPs/issues/1238 describing Non-transferable Tokens (NTTs).
+
+This repository hosts a conversion of [@violetprotocol/ERC1238-token](https://github.com/violetprotocol/ERC1238-token) to the [Extendable framework](https://github.com/violetprotocol/extendable).
+
+## Architecture
+
+### Storage
+
+- **ERC1238Storage**: ERC1238's main storage for balances and `baseURI`.
+- **ERC1238ApprovalStorage**: Stores the domain type hash to verify EIP-712 signatures in `ERC1238Approval`
+- **ERC1238URIStorage**: Stores `tokenURI`s by token id.
+- **ERC1238CollectionStorage**: Stores base id balances (see `ICollectionLogic`).
+- **PermissionStorage**: Stores the addresses which have been granted different roles (`rootController`, `intermediateController` and `controller`).
+
+### Badge
+
+Badge.sol is the main Extendable contract, it is responsible for managing the whole lifecycle of non-transferable tokens. It contains custom business logic, specific to Violet and becomes feature-complete after extending it with all the extensions specified below.
+It uses `PermissionStorage`, `ERC1238Storage` and `ERC1238ApprovalStorage` during construction.
+
+<br/>
+
+#### Badge Extensions
+
+`ExtendLogic`: Default extension from the Extendable Framework that enables extending.
+
+`BalanceGettersLogic`: Contains the logic to query balances of token owners. It uses `ERC1238Storage`.
+
+`BadgeBaseURILogic`: Contains the logic to query and set the base URI associated with tokens by default. It uses `ERC1238Storage` and has a dependency to the `PermissionLogic`.
+
+`BadgeMintLogic`: Contains the logic to mint tokens and how they can be minted. It uses `ERC1238ApprovalStorage` and `ERC1238Storage`. It has a dependency to `PermissionLogic`, `TokenURISetLogic` and `BadgeBeforeMintLogic`.
+
+`BurnLogic`: Contains the logic to burn tokens and how they can be burnt. It uses `ERC1238Storage`. It has a dependency to `PermissionLogic`, `TokenURISetLogic` and `BeforeBurnLogic`.
+
+`BadgeBeforeMintLogic`: Contains custom logic for what happens before tokens are minted. It has a dependency to the `CollectionLogic`.
+
+`BadgeBeforeBurnLogic`: Contains custom logic for what happens before tokens are burnt. It has a dependency to the `CollectionLogic`.
+
+`TokenURIGetLogic`: Contains the logic to fetch the token URI associated with a token id. It uses `ERC1238URIStorage` and `ERC1238Storage`.
+
+`TokenURISetLogic`: Contains the logic to set the token URI associated with a token id. It uses `ERC1238URIStorage` and has a dependency to the `PermissionLogic`.
+
+`CollectionLogic`: Contains the logic to track balances of token owners for tokens belonging to the same collection, represented by a shared `baseId` ("semi-fungible" tokens). It uses `ERC1238CollectionStorage`.
+
+`PermissionLogic`: Contains the logic to gate execution of some part of the code in other extensions. It uses `PermissionStorage`.
+
+<br/>
+
+## Tools
+
+This repository was generated from Solidity-template, which includes:
 
 - [Hardhat](https://github.com/nomiclabs/hardhat): compile and run the smart contracts on a local development network
 - [TypeChain](https://github.com/ethereum-ts/TypeChain): generate TypeScript types for smart contracts
@@ -9,9 +60,6 @@ My favorite setup for writing Solidity smart contracts.
 - [Solhint](https://github.com/protofire/solhint): linter
 - [Solcover](https://github.com/sc-forks/solidity-coverage): code coverage
 - [Prettier Plugin Solidity](https://github.com/prettier-solidity/prettier-plugin-solidity): code formatter
-
-This is a GitHub template, which means you can reuse it as many times as you want. You can do that by clicking the "Use this
-template" button at the top of the page.
 
 ## Usage
 
@@ -90,13 +138,25 @@ Delete the smart contract artifacts, the coverage reports and the Hardhat cache:
 $ yarn clean
 ```
 
-### Deploy
+### Deploying a Badge contract
 
 Deploy the contracts to Hardhat Network:
 
-```sh
-$ yarn deploy --greeting "Bonjour, le monde!"
+1. Deploy all required extensions.
+
 ```
+TS_NODE_FILES=true HARDHAT_NETWORK=localhost ts-node scripts/deployAllExtensions.ts
+```
+
+2. Follow the instructions in `/tasks/deploy/deployBadge`.
+
+3. Deploy the badge contract.
+
+```
+npx hardhat run --network local deploy:ERC1238-extendable
+```
+
+4. Extend with any missing extension using the `extend` hardhat task.
 
 ## Syntax Highlighting
 
