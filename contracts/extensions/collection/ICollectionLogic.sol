@@ -1,6 +1,12 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+/**
+ * @dev Interface for extensions that enable tracking the balances of token owners for tokens
+ * belonging to the same collection represented by a shared `baseId`.
+ * This `baseId` is packed inside token ids in the following way:
+ * [baseId (48 bits)][owner (160 bits)][counter (48 bits)]
+ */
 interface ICollectionLogic {
     /**
      * @dev Returns the balance of an address for a specific baseId.

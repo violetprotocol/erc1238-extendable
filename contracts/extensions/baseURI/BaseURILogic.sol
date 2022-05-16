@@ -4,10 +4,13 @@ pragma solidity ^0.8.13;
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./IBaseURILogic.sol";
 
+/**
+ * @dev Base logic to handle a base URI returned by default for every token id.
+ * This contract is meant to be inherited.
+ */
 contract BaseURILogic is IBaseURILogic {
     /**
      * @dev See {IBaseURILogic-baseURI}.
-     * Warning: Calling this function from another extension will fail.
      */
     function baseURI() public virtual override returns (string memory) {
         ERC1238State storage erc1238State = ERC1238Storage._getState();

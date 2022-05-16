@@ -8,9 +8,16 @@ import "./MintBaseLogic.sol";
 import "../URI/ITokenURISetLogic.sol";
 import "../permission/IPermissionLogic.sol";
 
+/**
+ * @dev Extension to handle minting tokens which inherits MintBaseLogic and adds custom logic around
+ * permissions and setting token URIs when minting.
+ */
 contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
     using Address for address;
 
+    /**
+     * @dev See {IBadgeMintLogic-mintToEOA}
+     */
     function mintToEOA(
         address to,
         uint256 id,
@@ -27,6 +34,9 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         ITokenURISetLogic(address(this))._setTokenURI(id, uri);
     }
 
+    /**
+     * @dev See {IBadgeMintLogic-mintToContract}
+     */
     function mintToContract(
         address to,
         uint256 id,
@@ -40,6 +50,9 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         ITokenURISetLogic(address(this))._setTokenURI(id, uri);
     }
 
+    /**
+     * @dev See {IBadgeMintLogic-mintBatchToEOA}
+     */
     function mintBatchToEOA(
         address to,
         uint256[] calldata ids,
@@ -56,6 +69,9 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         ITokenURISetLogic(address(this))._setBatchTokenURI(ids, uris);
     }
 
+    /**
+     * @dev See {IBadgeMintLogic-mintBatchToContract}
+     */
     function mintBatchToContract(
         address to,
         uint256[] calldata ids,
@@ -69,6 +85,9 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         ITokenURISetLogic(address(this))._setBatchTokenURI(ids, uris);
     }
 
+    /**
+     * @dev See {IBadgeMintLogic-mintBundle}
+     */
     function mintBundle(
         address[] calldata to,
         uint256[][] calldata ids,

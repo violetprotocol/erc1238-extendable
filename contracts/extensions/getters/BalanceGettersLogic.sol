@@ -5,9 +5,12 @@ import "@violetprotocol/extendable/extensions/Extension.sol";
 import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./IBalanceGettersLogic.sol";
 
+/**
+ * @dev Extension that implements {IBalanceGettersLogic}.
+ */
 contract BalanceGettersLogic is IBalanceGettersLogic, Extension {
     /**
-     * @dev See {IERC1238-balanceOf}.
+     * @dev See {IBalanceGettersLogic-balanceOf}.
      *
      * Requirements:
      *
@@ -20,7 +23,7 @@ contract BalanceGettersLogic is IBalanceGettersLogic, Extension {
     }
 
     /**
-     * @dev See {IERC1238-balanceOfBatch}.
+     * @dev See {IBalanceGettersLogic-balanceOfBatch}.
      *
      */
     function balanceOfBatch(address account, uint256[] memory ids) public virtual override returns (uint256[] memory) {
@@ -35,7 +38,7 @@ contract BalanceGettersLogic is IBalanceGettersLogic, Extension {
     }
 
     /**
-     * @dev See {IERC1238-balanceOfBundle}.
+     * @dev See {IBalanceGettersLogic-balanceOfBundle}.
      *
      */
     function balanceOfBundle(address[] memory accounts, uint256[][] memory ids)

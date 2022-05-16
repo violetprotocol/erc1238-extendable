@@ -79,6 +79,12 @@ describe("Badge - Permissions", function () {
       );
     });
 
+    it("should emit a NewController event", async () => {
+      await expect(badgeIPermissionLogic.connect(intermediateController).setController(admin.address))
+        .to.emit(badgeIPermissionLogic, "NewController")
+        .withArgs(admin.address);
+    });
+
     it("should let the root controller update the intermediate controller", async () => {
       await badgeIPermissionLogic.connect(rootController).setIntermediateController(admin.address);
 
@@ -91,6 +97,12 @@ describe("Badge - Permissions", function () {
       ).to.be.revertedWith("Unauthorized");
     });
 
+    it("should emit a NewIntermediateController event", async () => {
+      await expect(badgeIPermissionLogic.connect(rootController).setIntermediateController(admin.address))
+        .to.emit(badgeIPermissionLogic, "NewIntermediateController")
+        .withArgs(admin.address);
+    });
+
     it("should let the root controller update the root controller", async () => {
       await badgeIPermissionLogic.connect(rootController).setRootController(admin.address);
 
@@ -101,6 +113,12 @@ describe("Badge - Permissions", function () {
       await expect(badgeIPermissionLogic.connect(admin).setRootController(admin.address)).to.be.revertedWith(
         "Unauthorized",
       );
+    });
+
+    it("should emit a NewRootController event", async () => {
+      await expect(badgeIPermissionLogic.connect(rootController).setRootController(admin.address))
+        .to.emit(badgeIPermissionLogic, "NewRootController")
+        .withArgs(admin.address);
     });
   });
 });

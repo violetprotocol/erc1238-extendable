@@ -6,6 +6,9 @@ import { ERC1238URIState, ERC1238URIStorage } from "../../storage/ERC1238URIStor
 import "./ITokenURISetLogic.sol";
 import "../permission/IPermissionLogic.sol";
 
+/**
+ * @dev Internal extension used for setting and deleting token URIs associated with token ids.
+ */
 contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
     /**
      * @dev Sets `_tokenURI` as the token URI for the tokens of type `id`.

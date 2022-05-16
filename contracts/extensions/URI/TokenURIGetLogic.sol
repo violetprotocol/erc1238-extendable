@@ -7,6 +7,9 @@ import { ERC1238State, ERC1238Storage } from "../../storage/ERC1238Storage.sol";
 import "./ITokenURIGetLogic.sol";
 import "../../interfaces/IERC1155MetadataURI.sol";
 
+/**
+ * @dev Extension used for fetching a URI associated with a specifc token id.
+ */
 contract TokenURIGetLogic is Extension, ITokenURIGetLogic, IERC1155MetadataURI {
     /**
      * @dev See {IERC1238URIStorage-tokenURI}.
@@ -16,7 +19,8 @@ contract TokenURIGetLogic is Extension, ITokenURIGetLogic, IERC1155MetadataURI {
     }
 
     /**
-     * @dev Returns the uri of a certain token id.
+     * @dev See {IERC1155MetadataURI-uri}.
+     * Returns the uri of a certain token id.
      * Provides backwards-compatibility with the IERC1155MetadataURI interface.
      */
     function uri(uint256 id) public view override(IERC1155MetadataURI) returns (string memory) {
@@ -43,6 +47,8 @@ contract TokenURIGetLogic is Extension, ITokenURIGetLogic, IERC1155MetadataURI {
     }
 
     function getInterface() public pure virtual override returns (string memory) {
-        return "function tokenURI(uint256 id) external returns (string memory);\n";
+        return
+            "function tokenURI(uint256 id) external returns (string memory);\n"
+            "function uri(uint256 id) external view returns (string memory);\n";
     }
 }

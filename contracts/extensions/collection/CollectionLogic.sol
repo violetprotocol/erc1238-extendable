@@ -5,9 +5,12 @@ import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { ERC1238CollectionState, ERC1238CollectionStorage } from "../../storage/ERC1238CollectionStorage.sol";
 import "./ICollectionLogic.sol";
 
+/**
+ * @dev See {ICollectionLogic}.
+ */
 contract CollectionLogic is InternalExtension, ICollectionLogic {
     /**
-     * @dev See {IERC1238Collection}-balanceFromBaseId.
+     * @dev See {ICollectionLogic}-balanceFromBaseId.
      */
     function balanceFromBaseId(address account, uint48 baseId) public override returns (uint256) {
         ERC1238CollectionState storage erc1238CollectionState = ERC1238CollectionStorage._getState();
@@ -16,7 +19,7 @@ contract CollectionLogic is InternalExtension, ICollectionLogic {
     }
 
     /**
-     * @dev See {IERC1238Collection}-getConstructedTokenID.
+     * @dev See {ICollectionLogic}-getConstructedTokenID.
      */
     function getConstructedTokenID(
         uint48 baseId,

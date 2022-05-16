@@ -9,6 +9,14 @@ import { PermissionState, PermissionStorage } from "../storage/PermissionStorage
 import { IERC1155MetadataURI } from "../interfaces/IERC1155MetadataURI.sol";
 import { IERC1238 } from "../interfaces/IERC1238.sol";
 
+/**
+ * @title Extendable smart contract for non-transferable tokens
+ * @dev This contract is constructed with 5 base extensions
+ * and meant to be further extended with more extensions
+ * to provide additional features.
+ * As a whole it forms an implementation of ERC1238, supporting both
+ * fungible and non-fungible non-transferable tokens.
+ */
 contract Badge is Extendable, ERC165 {
     constructor(
         address rootController,
@@ -19,6 +27,7 @@ contract Badge is Extendable, ERC165 {
         address mintLogic,
         address burnLogic
     ) Extendable(extendLogic) {
+        require(rootController != address(0x0), "Invalid address for root controller");
         PermissionState storage permissionState = PermissionStorage._getState();
         permissionState.rootController = rootController;
 
@@ -50,6 +59,7 @@ contract Badge is Extendable, ERC165 {
         erc1238ApprovalState.domainTypeHash = bytes32(data);
     }
 
+    // ERC165 support
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == type(IERC165).interfaceId ||

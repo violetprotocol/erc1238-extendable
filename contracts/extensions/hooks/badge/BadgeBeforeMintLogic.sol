@@ -5,13 +5,15 @@ import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { IBeforeMintLogic } from "../generic/IBeforeMintLogic.sol";
 import { ICollectionLogic } from "../../../extensions/collection/ICollectionLogic.sol";
 
+/**
+ * @dev Internal Extension that implements {IBeforeMintLogic} and
+ * defines custom logic for what happens before tokens are minted.
+ */
 contract BadgeBeforeMintLogic is IBeforeMintLogic, InternalExtension {
     /**
      * @dev Hook that is called before an `amount` of tokens are minted.
-     *
-     * Calling conditions:
-     * - `minter` and `to` cannot be the zero address
-     *
+     * It calls the CollectionLogic extension to increments the base id balance
+     * of the recipient.
      */
     function _beforeMint(
         address,

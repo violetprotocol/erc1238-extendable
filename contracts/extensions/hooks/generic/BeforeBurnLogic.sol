@@ -4,13 +4,12 @@ pragma solidity ^0.8.13;
 import "@violetprotocol/extendable/extensions/InternalExtension.sol";
 import { IBeforeBurnLogic } from "./IBeforeBurnLogic.sol";
 
+/**
+ * @dev Internal Extension that implements {IBeforeBurnLogic}.
+ */
 contract BeforeBurnLogic is IBeforeBurnLogic, InternalExtension {
     /**
-     * @dev Hook that is called before an `amount` of tokens are burned.
-     *
-     * Calling conditions:
-     * - `burner` and `from` cannot be the zero address
-     *
+     * @dev See {IBeforeMintLogic-_beforeBurn}.
      */
     function _beforeBurn(
         address burner,
