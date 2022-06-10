@@ -25,11 +25,12 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         uint8 v,
         bytes32 r,
         bytes32 s,
+        uint256 approvalExpiry,
         string calldata uri,
         bytes calldata data
     ) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        _mintToEOA(to, id, amount, v, r, s, data);
+        _mintToEOA(to, id, amount, v, r, s, approvalExpiry, data);
 
         ITokenURISetLogic(address(this))._setTokenURI(id, uri);
     }
@@ -54,58 +55,60 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
      * @dev See {IBadgeMintLogic-mintBatchToEOA}
      */
     function mintBatchToEOA(
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
+        Batch calldata batch,
         uint8 v,
         bytes32 r,
         bytes32 s,
-        string[] calldata uris,
-        bytes calldata data
+        uint256 approvalExpiry,
+        string[] calldata uris
     ) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        _mintBatchToEOA(to, ids, amounts, v, r, s, data);
+        _mintBatchToEOA(batch.to, batch.ids, batch.amounts, v, r, s, approvalExpiry, batch.data);
 
-        ITokenURISetLogic(address(this))._setBatchTokenURI(ids, uris);
+        ITokenURISetLogic(address(this))._setBatchTokenURI(batch.ids, uris);
     }
 
     /**
      * @dev See {IBadgeMintLogic-mintBatchToContract}
      */
-    function mintBatchToContract(
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        string[] calldata uris,
-        bytes calldata data
-    ) external override {
+    function mintBatchToContract(Batch calldata batch, string[] calldata uris) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        _mintBatchToContract(to, ids, amounts, data);
+        _mintBatchToContract(batch.to, batch.ids, batch.amounts, batch.data);
 
-        ITokenURISetLogic(address(this))._setBatchTokenURI(ids, uris);
+        ITokenURISetLogic(address(this))._setBatchTokenURI(batch.ids, uris);
     }
 
     /**
      * @dev See {IBadgeMintLogic-mintBundle}
      */
     function mintBundle(
-        address[] calldata to,
-        uint256[][] calldata ids,
-        uint256[][] calldata amounts,
-        string[][] calldata uris,
-        bytes[] calldata data
+        Batch[] calldata batches,
+        MintApprovalSignature[] calldata mintApprovalSignatures,
+        string[][] calldata uris
     ) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        require(ids.length == uris.length, "ids and uris length mismatch");
+        require(batches.length == uris.length, "batches and uris length mismatch");
 
-        for (uint256 i = 0; i < to.length; i++) {
-            ITokenURISetLogic(address(this))._setBatchTokenURI(ids[i], uris[i]);
+        uint256 batchesLength = batches.length;
+        for (uint256 i = 0; i < batchesLength; i++) {
+            Batch memory batch = batches[i];
+            MintApprovalSignature memory mintApprovalSig = mintApprovalSignatures[i];
 
-            if (to[i].isContract()) {
-                _mintBatchToContract(to[i], ids[i], amounts[i], data[i]);
+            ITokenURISetLogic(address(this))._setBatchTokenURI(batch.ids, uris[i]);
+
+            if (batch.to.isContract()) {
+                _mintBatchToContract(batch.to, batch.ids, batch.amounts, batch.data);
             } else {
-                (bytes32 r, bytes32 s, uint8 v) = splitSignature(data[i]);
-                _mintBatchToEOA(to[i], ids[i], amounts[i], v, r, s, data[i]);
+                _mintBatchToEOA(
+                    batch.to,
+                    batch.ids,
+                    batch.amounts,
+                    mintApprovalSig.v,
+                    mintApprovalSig.r,
+                    mintApprovalSig.s,
+                    mintApprovalSig.approvalExpiry,
+                    batch.data
+                );
             }
         }
     }
@@ -116,10 +119,10 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
 
     function getInterface() public pure virtual override returns (string memory) {
         return
-            "function mintToEOA(address to, uint256 id, uint256 amount, uint8 v, bytes32 r, bytes32 s, string calldata uri, bytes calldata data) external;\n"
+            "function mintToEOA(address to, uint256 id, uint256 amount, uint8 v, bytes32 r, bytes32 s, uint256 approvalExpiry, string calldata uri, bytes calldata data) external;\n"
             "function mintToContract(address to, uint256 id, uint256 amount, string calldata uri, bytes calldata data) external;\n"
-            "function mintBatchToEOA(address to, uint256[] calldata ids, uint256[] calldata amounts, uint8 v, bytes32 r, bytes32 s, string[] calldata uris, bytes calldata data) external;\n"
+            "function mintBatchToEOA(Batch calldata batch, uint8 v, bytes32 r, bytes32 s, uint256 approvalExpiry, string[] calldata uris) external;\n"
             "function mintBatchToContract(address to, uint256[] calldata ids, uint256[] calldata amounts, string[] calldata uris, bytes calldata data) external;\n"
-            "function mintBundle(address[] calldata to, uint256[][] calldata ids, uint256[][] calldata amounts, string[][] calldata uris, bytes[] calldata data) external;\n";
+            "function mintBundle(Batch[] calldata batches, MintApprovalSignature[] calldata mintApprovalSignatures, string[][] calldata uris) external;\n";
     }
 }

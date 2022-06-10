@@ -16,6 +16,7 @@ struct MintBatchApproval {
     address recipient;
     uint256[] ids;
     uint256[] amounts;
+    uint256 approvalExpiry;
 }
 
 // Typed data of a Mint transaction
@@ -24,6 +25,7 @@ struct MintApproval {
     address recipient;
     uint256 id;
     uint256 amount;
+    uint256 approvalExpiry;
 }
 
 /**
@@ -43,10 +45,10 @@ contract ERC1238Approval {
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     bytes32 private constant MINT_APPROVAL_TYPEHASH =
-        keccak256("MintApproval(address recipient,uint256 id,uint256 amount)");
+        keccak256("MintApproval(address recipient,uint256 id,uint256 amount,uint256 approvalExpiry)");
 
     bytes32 private constant MINT_BATCH_APPROVAL_TYPEHASH =
-        keccak256("MintBatchApproval(address recipient,uint256[] ids,uint256[] amounts)");
+        keccak256("MintBatchApproval(address recipient,uint256[] ids,uint256[] amounts,uint256 approvalExpiry)");
 
     function getDomainSeparator() public view returns (bytes32) {
         // The EIP712Domain shares the same name for all ERC128Approval contracts
@@ -81,11 +83,25 @@ contract ERC1238Approval {
     function _getMintApprovalMessageHash(
         address recipient,
         uint256 id,
-        uint256 amount
+        uint256 amount,
+        uint256 approvalExpiry
     ) internal pure returns (bytes32) {
-        MintApproval memory mintApproval = MintApproval({ recipient: recipient, id: id, amount: amount });
+        MintApproval memory mintApproval = MintApproval({
+            recipient: recipient,
+            id: id,
+            amount: amount,
+            approvalExpiry: approvalExpiry
+        });
         return
-            keccak256(abi.encode(MINT_APPROVAL_TYPEHASH, mintApproval.recipient, mintApproval.id, mintApproval.amount));
+            keccak256(
+                abi.encode(
+                    MINT_APPROVAL_TYPEHASH,
+                    mintApproval.recipient,
+                    mintApproval.id,
+                    mintApproval.amount,
+                    mintApproval.approvalExpiry
+                )
+            );
     }
 
     /**
@@ -97,12 +113,14 @@ contract ERC1238Approval {
     function _getMintBatchApprovalMessageHash(
         address recipient,
         uint256[] memory ids,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        uint256 approvalExpiry
     ) internal pure returns (bytes32) {
         MintBatchApproval memory mintBatchApproval = MintBatchApproval({
             recipient: recipient,
             ids: ids,
-            amounts: amounts
+            amounts: amounts,
+            approvalExpiry: approvalExpiry
         });
 
         return
@@ -111,7 +129,8 @@ contract ERC1238Approval {
                     MINT_BATCH_APPROVAL_TYPEHASH,
                     mintBatchApproval.recipient,
                     keccak256(abi.encodePacked(mintBatchApproval.ids)),
-                    keccak256(abi.encodePacked(mintBatchApproval.amounts))
+                    keccak256(abi.encodePacked(mintBatchApproval.amounts)),
+                    mintBatchApproval.approvalExpiry
                 )
             );
     }
@@ -131,7 +150,6 @@ contract ERC1238Approval {
         ERC1238ApprovalState storage erc1238ApprovalState = ERC1238ApprovalStorage._getState();
 
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", erc1238ApprovalState.domainTypeHash, mintApprovalHash));
-
         require(ecrecover(digest, v, r, s) == recipient, "ERC1238: Approval verification failed");
     }
 }

@@ -2,6 +2,20 @@
 pragma solidity ^0.8.13;
 
 interface IBadgeMintLogic {
+    struct Batch {
+        address to;
+        uint256[] ids;
+        uint256[] amounts;
+        bytes data;
+    }
+
+    struct MintApprovalSignature {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 approvalExpiry;
+    }
+
     /**
      * @dev Creates `amount` tokens of token type `id`, and assigns them to the
      * Externally Owned Account (to).
@@ -20,6 +34,7 @@ interface IBadgeMintLogic {
         uint8 v,
         bytes32 r,
         bytes32 s,
+        uint256 approvalExpiry,
         string calldata uri,
         bytes calldata data
     ) external;
@@ -56,14 +71,12 @@ interface IBadgeMintLogic {
      * Emits a {MintBatch} event.
      */
     function mintBatchToEOA(
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
+        Batch calldata batch,
         uint8 v,
         bytes32 r,
         bytes32 s,
-        string[] calldata uris,
-        bytes calldata data
+        uint256 approvalExpiry,
+        string[] calldata uris
     ) external;
 
     /**
@@ -80,13 +93,7 @@ interface IBadgeMintLogic {
      *
      * Emits a {MintBatch} event.
      */
-    function mintBatchToContract(
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        string[] calldata uris,
-        bytes calldata data
-    ) external;
+    function mintBatchToContract(Batch calldata batch, string[] calldata uris) external;
 
     /**
      * @dev Mints a bundle, which can be viewed as minting several batches
@@ -103,10 +110,8 @@ interface IBadgeMintLogic {
      * Emits multiple {MintBatch} events.
      */
     function mintBundle(
-        address[] calldata to,
-        uint256[][] calldata ids,
-        uint256[][] calldata amounts,
-        string[][] calldata uris,
-        bytes[] calldata data
+        Batch[] calldata batches,
+        MintApprovalSignature[] calldata mintApprovalSignatures,
+        string[][] calldata uris
     ) external;
 }

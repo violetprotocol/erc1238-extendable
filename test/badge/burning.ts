@@ -9,6 +9,7 @@ import {
   BadgeMintLogic,
   BurnLogic,
   ERC1238ReceiverMock,
+  IBadgeMintLogic,
   IBalanceGettersLogic,
   IBurnBaseLogic,
   IPermissionLogic,
@@ -34,6 +35,18 @@ describe("Badge - Burning", function () {
   let badgeBurn: BurnLogic;
   let badgeITokenURIGetLogic: ITokenURIGetLogic;
 
+  const data = "0x12345678";
+  const tokenURI = "tokenURI";
+  const tokenId = toBn("11223344");
+  const burnAmount = toBn("987");
+  const deleteURI = false;
+
+  const tokenBatchIds = [toBn("2000"), toBn("2010"), toBn("2020")];
+  const tokenBatchURIs = ["tokenUri1", "tokenUri2", "tokenUri3"];
+  const mintBatchAmounts = [toBn("5000"), toBn("10000"), toBn("42195")];
+  const burnBatchAmounts = [toBn("5000"), toBn("9001"), toBn("195")];
+  let batch: IBadgeMintLogic.BatchStruct;
+
   before(async function () {
     const signers = await ethers.getSigners();
     admin = signers[0];
@@ -45,6 +58,13 @@ describe("Badge - Burning", function () {
       baseExtensions,
       additionalExtensions,
     } = await makeTestEnv(admin));
+
+    batch = {
+      to: contractRecipient1.address,
+      ids: tokenBatchIds,
+      amounts: mintBatchAmounts,
+      data,
+    };
   });
 
   beforeEach(async function () {
@@ -73,17 +93,6 @@ describe("Badge - Burning", function () {
   });
 
   describe("Burning", () => {
-    const data = "0x12345678";
-    const tokenURI = "tokenURI";
-    const tokenId = toBn("11223344");
-    const burnAmount = toBn("987");
-    const deleteURI = false;
-
-    const tokenBatchIds = [toBn("2000"), toBn("2010"), toBn("2020")];
-    const tokenBatchURIs = ["tokenUri1", "tokenUri2", "tokenUri3"];
-    const mintBatchAmounts = [toBn("5000"), toBn("10000"), toBn("42195")];
-    const burnBatchAmounts = [toBn("5000"), toBn("9001"), toBn("195")];
-
     /*
      * BURNING
      */
@@ -192,15 +201,12 @@ describe("Badge - Burning", function () {
       });
 
       it("should revert when burning a non-existent token id", async () => {
-        await badgeMint
-          .connect(admin)
-          .mintBatchToContract(
-            contractRecipient1.address,
-            tokenBatchIds.slice(1),
-            burnBatchAmounts.slice(1),
-            tokenBatchURIs.slice(1),
-            data,
-          );
+        const batchWithLessIds = {
+          ...batch,
+          ids: tokenBatchIds.slice(1),
+          amounts: burnBatchAmounts.slice(1),
+        };
+        await badgeMint.connect(admin).mintBatchToContract(batchWithLessIds, tokenBatchURIs.slice(1));
 
         await expect(
           badgeBurn.connect(admin).burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI),
@@ -214,9 +220,7 @@ describe("Badge - Burning", function () {
       });
 
       it("should properly burn tokens by the admin", async () => {
-        await badgeMint
-          .connect(admin)
-          .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+        await badgeMint.connect(admin).mintBatchToContract(batch, tokenBatchURIs);
 
         await badgeBurn
           .connect(admin)
@@ -232,9 +236,7 @@ describe("Badge - Burning", function () {
       });
 
       it("should properly burn tokens by the owner", async () => {
-        await badgeMint
-          .connect(admin)
-          .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+        await badgeMint.connect(admin).mintBatchToContract(batch, tokenBatchURIs);
 
         await contractRecipient1.burnBatch(
           badge.address,
@@ -254,9 +256,7 @@ describe("Badge - Burning", function () {
       });
 
       it("should not delete the tokenURI if deleteURI is false", async () => {
-        await badgeMint
-          .connect(admin)
-          .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+        await badgeMint.connect(admin).mintBatchToContract(batch, tokenBatchURIs);
 
         await badgeBurn
           .connect(admin)
@@ -270,9 +270,7 @@ describe("Badge - Burning", function () {
 
       it("should delete the token URIs if deleteURI is true", async () => {
         const deleteURI = true;
-        await badgeMint
-          .connect(admin)
-          .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+        await badgeMint.connect(admin).mintBatchToContract(batch, tokenBatchURIs);
 
         await badgeBurn
           .connect(admin)
@@ -285,13 +283,7 @@ describe("Badge - Burning", function () {
       });
 
       it("should emit a BurnBatch event", async () => {
-        await badgeMint.mintBatchToContract(
-          contractRecipient1.address,
-          tokenBatchIds,
-          mintBatchAmounts,
-          tokenBatchURIs,
-          data,
-        );
+        await badgeMint.mintBatchToContract(batch, tokenBatchURIs);
 
         await expect(badgeBurn.burnBatch(contractRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI))
           .to.emit(badgeIBurnBaseLogic, "BurnBatch")
