@@ -152,6 +152,7 @@ contract ERC1238Approval {
         require(!erc1238ApprovalState.hasApprovalHashBeenUsed[mintApprovalHash], "ERC1238: Approval hash already used");
 
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", erc1238ApprovalState.domainTypeHash, mintApprovalHash));
+
         require(ecrecover(digest, v, r, s) == recipient, "ERC1238: Approval verification failed");
 
         erc1238ApprovalState.hasApprovalHashBeenUsed[mintApprovalHash] = true;
