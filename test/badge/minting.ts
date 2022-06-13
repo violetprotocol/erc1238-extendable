@@ -131,6 +131,16 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: invalid approval expiry time");
       });
 
+      it("should revert with a signature already used before", async () => {
+        await expect(
+          badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, approvalExpiry, tokenURI, data),
+        ).to.not.be.reverted;
+
+        await expect(
+          badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, approvalExpiry, tokenURI, data),
+        ).to.be.revertedWith("ERC1238: Approval hash already used");
+      });
+
       it("should revert if minter is not authorized", async () => {
         await expect(
           badgeMint
@@ -181,7 +191,19 @@ describe("Badge - Minting", function () {
         const URIAfterFirstMint = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
         expect(URIAfterFirstMint).to.eq(tokenURI);
 
-        // 2nd mint we pass an empty URI
+        // 2nd mint with a different expiry time
+        approvalExpiry = BigNumber.from(Math.floor(Date.now() / 1000) + twoDaysInSeconds * 2);
+
+        ({ v, r, s } = await getMintApprovalSignature({
+          signer: eoaRecipient1,
+          erc1238ContractAddress: badge.address.toLowerCase(),
+          chainId,
+          id: tokenId,
+          amount: mintAmount,
+          approvalExpiry,
+        }));
+
+        // An empty URI is passed
         await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, approvalExpiry, "", data);
 
         const URIAfterSecondMint = await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId);
@@ -288,6 +310,15 @@ describe("Badge - Minting", function () {
         await expect(
           badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, expiredTime, tokenBatchURIs),
         ).to.be.revertedWith("ERC1238: invalid approval expiry time");
+      });
+
+      it("should revert with a signature already used before", async () => {
+        await expect(badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs)).to.not.be
+          .reverted;
+
+        await expect(
+          badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs),
+        ).to.be.revertedWith("ERC1238: Approval hash already used");
       });
 
       it("should revert if the length of inputs do not match", async () => {

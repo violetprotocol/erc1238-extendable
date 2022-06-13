@@ -146,10 +146,15 @@ contract ERC1238Approval {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) internal view {
+    ) internal {
         ERC1238ApprovalState storage erc1238ApprovalState = ERC1238ApprovalStorage._getState();
+        // Prevent replay of signatures
+        require(!erc1238ApprovalState.hasApprovalHashBeenUsed[mintApprovalHash], "ERC1238: Approval hash already used");
 
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", erc1238ApprovalState.domainTypeHash, mintApprovalHash));
+
         require(ecrecover(digest, v, r, s) == recipient, "ERC1238: Approval verification failed");
+
+        erc1238ApprovalState.hasApprovalHashBeenUsed[mintApprovalHash] = true;
     }
 }
