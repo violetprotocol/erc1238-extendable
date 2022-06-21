@@ -29,6 +29,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
      * Emits a {MintSingle} event.
      */
     function _mintToContract(
+        address minter,
         address to,
         uint256 id,
         uint256 amount,
@@ -36,9 +37,9 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
     ) internal virtual {
         require(to.isContract(), "ERC1238: Recipient is not a contract");
 
-        _mint(to, id, amount, data);
+        _mint(minter, to, id, amount, data);
 
-        _doSafeMintAcceptanceCheck(msg.sender, to, id, amount, data);
+        _doSafeMintAcceptanceCheck(minter, to, id, amount, data);
     }
 
     /**
@@ -53,6 +54,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
      * Emits a {MintSingle} event.
      */
     function _mintToEOA(
+        address minter,
         address to,
         uint256 id,
         uint256 amount,
@@ -68,7 +70,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
 
         _verifyMintingApproval(to, messageHash, v, r, s);
 
-        _mint(to, id, amount, data);
+        _mint(minter, to, id, amount, data);
     }
 
     /**
@@ -83,6 +85,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
      * Emits a {MintBatch} event.
      */
     function _mintBatchToContract(
+        address minter,
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
@@ -90,9 +93,9 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
     ) internal virtual {
         require(to.isContract(), "ERC1238: Recipient is not a contract");
 
-        _mintBatch(to, ids, amounts, data);
+        _mintBatch(minter, to, ids, amounts, data);
 
-        _doSafeBatchMintAcceptanceCheck(msg.sender, to, ids, amounts, data);
+        _doSafeBatchMintAcceptanceCheck(minter, to, ids, amounts, data);
     }
 
     /**
@@ -106,6 +109,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
      * Emits a {MintBatch} event.
      */
     function _mintBatchToEOA(
+        address minter,
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
@@ -120,7 +124,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
         bytes32 messageHash = _getMintBatchApprovalMessageHash(to, ids, amounts, approvalExpiry);
         _verifyMintingApproval(to, messageHash, v, r, s);
 
-        _mintBatch(to, ids, amounts, data);
+        _mintBatch(minter, to, ids, amounts, data);
     }
 
     /**
@@ -136,12 +140,12 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
      * Emits a {MintSingle} event.
      */
     function _mint(
+        address minter,
         address to,
         uint256 id,
         uint256 amount,
         bytes memory data
     ) private {
-        address minter = msg.sender;
 
         IBeforeMintLogic(address(this))._beforeMint(minter, to, id, amount, data);
         ERC1238State storage erc1238State = ERC1238Storage._getState();
@@ -161,6 +165,7 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
      * Emits a {MintBatch} event.
      */
     function _mintBatch(
+        address minter,
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
@@ -168,7 +173,6 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
     ) private {
         require(ids.length == amounts.length, "ERC1238: ids and amounts length mismatch");
 
-        address minter = msg.sender;
         ERC1238State storage erc1238State = ERC1238Storage._getState();
 
         for (uint256 i = 0; i < ids.length; i++) {

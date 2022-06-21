@@ -72,10 +72,7 @@ interface IBadgeMintLogic {
      */
     function mintBatchToEOA(
         Batch calldata batch,
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        uint256 approvalExpiry,
+        MintApprovalSignature calldata mintApprovalSignature,
         string[] calldata uris
     ) external;
 
@@ -103,6 +100,7 @@ interface IBadgeMintLogic {
      * otherwise it will override any previously set value that id.
      *
      * Requirements:
+     * - MUST be called directly and not via another extension as it uses `msg.sender`
      * - `to` can be a combination of smart contract addresses and EOAs.
      * - If `to` is not a contract, an EIP712 signature from `to` as defined by ERC1238Approval
      * must be passed at the right index in `data`.
