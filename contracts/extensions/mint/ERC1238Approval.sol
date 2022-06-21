@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import { ERC1238ApprovalState, ERC1238ApprovalStorage } from "../../storage/ERC1238ApprovalStorage.sol";
+import "hardhat/console.sol";
 
 struct EIP712Domain {
     string name;
@@ -132,6 +133,18 @@ contract ERC1238Approval {
 
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", erc1238ApprovalState.domainTypeHash, mintApprovalHash));
 
-        require(ecrecover(digest, v, r, s) == recipient, "ERC1238: Approval verification failed");
+        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+            revert("ERC1238: invalid signature s");
+        }
+        if (v != 27 && v != 28) {
+            revert("ERC1238: invalid signature v");
+        }
+
+        address signer = ecrecover(digest, v, r, s);
+        if (signer == address(0)) {
+            revert("ERC1238: invalid signature");
+        }
+
+        require(signer == recipient, "ERC1238: Approval verification failed");
     }
 }

@@ -85,6 +85,9 @@ describe("Badge - Minting", function () {
     const tokenBatchURIs = ["", "tokenUri1", "tokenUri2"];
     const expectedTokenBatchURIs = [baseURI, tokenBatchURIs[1], tokenBatchURIs[2]];
 
+    const invalidSignatureV = 26;
+    const invalidSignatureS = "0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A1";
+
     /*
      * MINTING
      */
@@ -104,7 +107,7 @@ describe("Badge - Minting", function () {
         }));
       });
 
-      it("should revert with an invalid signature", async () => {
+      it("should revert with an invalid signer", async () => {
         await expect(
           badgeMint
             .connect(admin)
@@ -112,10 +115,31 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: Approval verification failed");
       });
 
+      // TO-DO properly test ecrecover to address(0x0)?
+      // it("should revert with an invalid signature", async () => {
+      //   await expect(
+      //     badgeMint
+      //       .connect(admin)
+      //       .mintToEOA(ethers.constants.AddressZero, tokenId, mintAmount, v, r, s, tokenURI, data),
+      //   ).to.be.revertedWith("ERC1238: invalid signature");
+      // });
+
       it("should revert if minter is not authorized", async () => {
         await expect(
           badgeMint.connect(signer2).mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data),
         ).to.be.revertedWith("Unauthorized: caller is not the controller");
+      });
+
+      it("should revert if signature v is invalid", async () => {
+        await expect(
+          badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, invalidSignatureV, r, s, tokenURI, data),
+        ).to.be.revertedWith("ERC1238: invalid signature v");
+      });
+
+      it("should revert if signature s is invalid", async () => {
+        await expect(
+          badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, invalidSignatureS, tokenURI, data),
+        ).to.be.revertedWith("ERC1238: invalid signature s");
       });
 
       it("should credit the amount of tokens", async () => {
