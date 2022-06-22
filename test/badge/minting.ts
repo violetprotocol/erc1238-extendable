@@ -299,7 +299,7 @@ describe("Badge - Minting", function () {
           to: ethers.constants.AddressZero,
         };
         await expect(
-          badgeMint.connect(admin).mintBatchToEOA(batchWithWrongAddress, v, r, s, approvalExpiry, tokenBatchURIs),
+          badgeMint.connect(admin).mintBatchToEOA(batchWithWrongAddress, { v, r, s, approvalExpiry }, tokenBatchURIs),
         ).to.be.revertedWith("ERC1238: Approval verification failed");
       });
 
@@ -308,16 +308,16 @@ describe("Badge - Minting", function () {
         const expiredTime = approvalExpiry.sub(twoDaysInSeconds);
 
         await expect(
-          badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, expiredTime, tokenBatchURIs),
+          badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry: expiredTime }, tokenBatchURIs),
         ).to.be.revertedWith("ERC1238: invalid approval expiry time");
       });
 
       it("should revert with a signature already used before", async () => {
-        await expect(badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs)).to.not.be
-          .reverted;
+        await expect(badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs)).to.not
+          .be.reverted;
 
         await expect(
-          badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs),
+          badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs),
         ).to.be.revertedWith("ERC1238: Approval hash already used");
       });
 
@@ -336,18 +336,18 @@ describe("Badge - Minting", function () {
         };
 
         await expect(
-          badgeMint.connect(admin).mintBatchToEOA(batchWithWrongIdsLength, v, r, s, approvalExpiry, tokenBatchURIs),
+          badgeMint.connect(admin).mintBatchToEOA(batchWithWrongIdsLength, { v, r, s, approvalExpiry }, tokenBatchURIs),
         ).to.be.revertedWith("ERC1238: ids and amounts length mismatch");
       });
 
       it("should revert if minter is not authorized", async () => {
         await expect(
-          badgeMint.connect(signer2).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs),
+          badgeMint.connect(signer2).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs),
         ).to.be.revertedWith("Unauthorized: caller is not the controller");
       });
 
       it("should credit the minted tokens", async () => {
-        await badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs);
+        await badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs);
 
         tokenBatchIds.forEach(async (tokenId, index) =>
           expect(await badgeIBalance.callStatic.balanceOf(eoaRecipient1.address, tokenId)).to.eq(
@@ -357,7 +357,7 @@ describe("Badge - Minting", function () {
       });
 
       it("should set the right token URIs", async () => {
-        await badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs);
+        await badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs);
 
         const setURIs = await Promise.all(
           tokenBatchIds.map(async tokenId => await badgeITokenURIGetLogic.callStatic.tokenURI(tokenId)),
@@ -367,7 +367,7 @@ describe("Badge - Minting", function () {
       });
 
       it("should emit URI events", async () => {
-        const tx = await badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs);
+        const tx = await badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs);
         const receipt = await tx.wait();
 
         // Remove the first MintBatch event and parse with the right interface
@@ -381,7 +381,7 @@ describe("Badge - Minting", function () {
       });
 
       it("should emit a MintBatch event", async () => {
-        await expect(badgeMint.mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs))
+        await expect(badgeMint.mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs))
           .to.emit(badgeERC1238, "MintBatch")
           .withArgs(admin.address, eoaRecipient1.address, tokenBatchIds, mintBatchAmounts);
       });

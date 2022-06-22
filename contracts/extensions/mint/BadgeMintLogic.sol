@@ -30,7 +30,9 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         bytes calldata data
     ) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        _mintToEOA(to, id, amount, v, r, s, approvalExpiry, data);
+        address minter = _lastExternalCaller();
+
+        _mintToEOA(minter, to, id, amount, v, r, s, approvalExpiry, data);
 
         ITokenURISetLogic(address(this))._setTokenURI(id, uri);
     }
@@ -46,7 +48,9 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         bytes calldata data
     ) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        _mintToContract(to, id, amount, data);
+        address minter = _lastExternalCaller();
+
+        _mintToContract(minter, to, id, amount, data);
 
         ITokenURISetLogic(address(this))._setTokenURI(id, uri);
     }
@@ -56,14 +60,23 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
      */
     function mintBatchToEOA(
         Batch calldata batch,
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        uint256 approvalExpiry,
+        MintApprovalSignature calldata mintApprovalSignature,
         string[] calldata uris
     ) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        _mintBatchToEOA(batch.to, batch.ids, batch.amounts, v, r, s, approvalExpiry, batch.data);
+        address minter = _lastExternalCaller();
+
+        _mintBatchToEOA(
+            minter,
+            batch.to,
+            batch.ids,
+            batch.amounts,
+            mintApprovalSignature.v,
+            mintApprovalSignature.r,
+            mintApprovalSignature.s,
+            mintApprovalSignature.approvalExpiry,
+            batch.data
+        );
 
         ITokenURISetLogic(address(this))._setBatchTokenURI(batch.ids, uris);
     }
@@ -73,7 +86,9 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
      */
     function mintBatchToContract(Batch calldata batch, string[] calldata uris) external override {
         IPermissionLogic(address(this)).revertIfNotController();
-        _mintBatchToContract(batch.to, batch.ids, batch.amounts, batch.data);
+        address minter = _lastExternalCaller();
+
+        _mintBatchToContract(minter, batch.to, batch.ids, batch.amounts, batch.data);
 
         ITokenURISetLogic(address(this))._setBatchTokenURI(batch.ids, uris);
     }
@@ -97,9 +112,10 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
             ITokenURISetLogic(address(this))._setBatchTokenURI(batch.ids, uris[i]);
 
             if (batch.to.isContract()) {
-                _mintBatchToContract(batch.to, batch.ids, batch.amounts, batch.data);
+                _mintBatchToContract(msg.sender, batch.to, batch.ids, batch.amounts, batch.data);
             } else {
                 _mintBatchToEOA(
+                    msg.sender,
                     batch.to,
                     batch.ids,
                     batch.amounts,
@@ -121,7 +137,7 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
         return
             "function mintToEOA(address to, uint256 id, uint256 amount, uint8 v, bytes32 r, bytes32 s, uint256 approvalExpiry, string calldata uri, bytes calldata data) external;\n"
             "function mintToContract(address to, uint256 id, uint256 amount, string calldata uri, bytes calldata data) external;\n"
-            "function mintBatchToEOA(Batch calldata batch, uint8 v, bytes32 r, bytes32 s, uint256 approvalExpiry, string[] calldata uris) external;\n"
+            "function mintBatchToEOA(Batch calldata batch, MintApprovalSignature calldata mintApprovalSignature, string[] calldata uris) external;\n"
             "function mintBatchToContract(address to, uint256[] calldata ids, uint256[] calldata amounts, string[] calldata uris, bytes calldata data) external;\n"
             "function mintBundle(Batch[] calldata batches, MintApprovalSignature[] calldata mintApprovalSignatures, string[][] calldata uris) external;\n";
     }

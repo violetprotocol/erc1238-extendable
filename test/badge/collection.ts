@@ -436,7 +436,7 @@ describe("Badge - Collection", function () {
             amounts: mintBatchAmounts,
             data,
           };
-          await badgeMint.connect(admin).mintBatchToEOA(batch, v, r, s, approvalExpiry, tokenBatchURIs);
+          await badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs);
 
           const balanceOfBaseId1 = await badgeCollectionLogic.callStatic.balanceFromBaseId(
             eoaRecipient1.address,
@@ -630,7 +630,7 @@ describe("Badge - Collection", function () {
           it("should properly decrease the baseId balances", async () => {
             const approvalExpiry = BigNumber.from(Math.floor(Date.now() / 1000) + EXPIRY_TIME_OFFSET);
 
-            const { v, r, s } = await getMintBatchApprovalSignature({
+            const signature = await getMintBatchApprovalSignature({
               signer: eoaRecipient1,
               erc1238ContractAddress: badgeMint.address,
               chainId,
@@ -646,10 +646,7 @@ describe("Badge - Collection", function () {
                 amounts: mintBatchAmounts,
                 data,
               },
-              v,
-              r,
-              s,
-              approvalExpiry,
+              signature,
               tokenBatchURIs,
             );
 
