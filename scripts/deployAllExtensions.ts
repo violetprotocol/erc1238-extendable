@@ -17,7 +17,7 @@ async function main() {
   const beforeMintLogic = await getDeployedContractFromArtifact("BadgeBeforeMintLogic");
   const badgeMintLogic = await getDeployedContractFromArtifact("BadgeMintLogic");
   const beforeBurnLogic = await getDeployedContractFromArtifact("BadgeBeforeBurnLogic");
-  const burnLogic = await getDeployedContractFromArtifact("BurnLogic");
+  const badgeBurnLogic = await getDeployedContractFromArtifact("BadgeBurnLogic");
   const tokenURIGetLogic = await getDeployedContractFromArtifact("TokenURIGetLogic");
   const tokenURISetLogic = await getDeployedContractFromArtifact("TokenURISetLogic");
   const collectionLogic = await getDeployedContractFromArtifact("CollectionLogic");
@@ -28,7 +28,7 @@ async function main() {
     balanceGettersLogic,
     baseURILogic,
     badgeMintLogic,
-    burnLogic,
+    badgeBurnLogic,
     beforeMintLogic,
     beforeBurnLogic,
     tokenURIGetLogic,

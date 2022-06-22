@@ -6,8 +6,8 @@ import type { Artifact } from "hardhat/types";
 
 import {
   Badge,
+  BadgeBurnLogic,
   BadgeMintLogic,
-  BurnLogic,
   ERC1238ReceiverMock,
   IBadgeMintLogic,
   IBalanceGettersLogic,
@@ -32,7 +32,7 @@ describe("Badge - Burning", function () {
   let badgeMint: BadgeMintLogic;
   let badgeIBurnBaseLogic: IBurnBaseLogic;
   let badgeIPermissionLogic: IPermissionLogic;
-  let badgeBurn: BurnLogic;
+  let badgeBurn: BadgeBurnLogic;
   let badgeITokenURIGetLogic: ITokenURIGetLogic;
 
   const data = "0x12345678";
@@ -83,7 +83,7 @@ describe("Badge - Burning", function () {
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
     badgeIBurnBaseLogic = <IBurnBaseLogic>await ethers.getContractAt("IBurnBaseLogic", badge.address);
-    badgeBurn = <BurnLogic>await ethers.getContractAt("BurnLogic", badge.address);
+    badgeBurn = <BadgeBurnLogic>await ethers.getContractAt("BadgeBurnLogic", badge.address);
     badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
     badgeITokenURIGetLogic = <ITokenURIGetLogic>await ethers.getContractAt("ITokenURIGetLogic", badge.address);
 

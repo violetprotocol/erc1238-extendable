@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 
 import "../interfaces/IERC1238Receiver.sol";
 import "../utils/ERC165.sol";
-import "../../contracts/extensions/burn/IBurnLogic.sol";
+import "../../contracts/extensions/burn/IBadgeBurnLogic.sol";
 
 // This is a dummy example of a ERC1238Receiver with arbitrary rules.
 // It will reject non-transferable tokens if the token id is 0 in the case of a single token mint
@@ -48,7 +48,7 @@ contract ERC1238ReceiverMock is ERC165, IERC1238Receiver {
         uint256 amount,
         bool deleteURI
     ) external {
-        IBurnLogic(targetContract).burn(address(this), id, amount, deleteURI);
+        IBadgeBurnLogic(targetContract).burn(address(this), id, amount, deleteURI);
     }
 
     function burnBatch(
@@ -58,7 +58,7 @@ contract ERC1238ReceiverMock is ERC165, IERC1238Receiver {
         uint256[] memory amounts,
         bool deleteURI
     ) public {
-        IBurnLogic(targetContract).burnBatch(from, ids, amounts, deleteURI);
+        IBadgeBurnLogic(targetContract).burnBatch(from, ids, amounts, deleteURI);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {

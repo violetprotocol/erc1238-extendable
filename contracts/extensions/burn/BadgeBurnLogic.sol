@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/Extension.sol";
 import "./BurnBaseLogic.sol";
-import "./IBurnLogic.sol";
+import "./IBadgeBurnLogic.sol";
 import "../permission/IPermissionLogic.sol";
 import "../hooks/generic/IBeforeBurnLogic.sol";
 import "../URI/ITokenURISetLogic.sol";
@@ -12,9 +12,9 @@ import "../URI/ITokenURISetLogic.sol";
  * @dev Extension to handle burning tokens which inherits BurnBaseLogic and adds custom logic around
  * permissions and the option to delete token URIs when burning.
  */
-contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
+contract BadgeBurnLogic is Extension, IBadgeBurnLogic, BurnBaseLogic {
     /**
-     * @dev See {IBurnLogic-burn}.
+     * @dev See {IBadgeBurnLogic-burn}.
      */
     function burn(
         address from,
@@ -33,7 +33,7 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
     }
 
     /**
-     * @dev See {IBurnLogic-burnBatch}.
+     * @dev See {IBadgeBurnLogic-burnBatch}.
      */
     function burnBatch(
         address from,
@@ -87,34 +87,19 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
         uint256[] memory ids,
         uint256[] memory amounts
     ) private {
-        require(from != address(0), "ERC1238: burn from the zero address");
-        require(ids.length == amounts.length, "ERC1238: ids and amounts length mismatch");
-
         address burner = _lastExternalCaller();
-        IBeforeBurnLogic beforeBurnLogic = IBeforeBurnLogic(address(this));
 
-        ERC1238State storage erc1238State = ERC1238Storage._getState();
+        _burnBatch(burner, from, ids, amounts);
 
         for (uint256 i = 0; i < ids.length; i++) {
-            uint256 id = ids[i];
-            uint256 amount = amounts[i];
-
-            beforeBurnLogic._beforeBurn(burner, from, id, amount);
-
-            uint256 fromBalance = erc1238State._balances[id][from];
-            require(fromBalance >= amount, "ERC1238: burn amount exceeds balance");
-            unchecked {
-                erc1238State._balances[id][from] = fromBalance - amount;
-            }
-
-            ITokenURISetLogic(address(this))._deleteTokenURI(id);
+            ITokenURISetLogic(address(this))._deleteTokenURI(ids[i]);
         }
 
         emit BurnBatch(burner, from, ids, amounts);
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {
-        return (type(IBurnLogic).interfaceId);
+        return (type(IBadgeBurnLogic).interfaceId);
     }
 
     function getInterface() public pure virtual override returns (string memory) {

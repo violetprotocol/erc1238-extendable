@@ -16,7 +16,7 @@ task("deploy:badge").setAction(async function (taskArguments: TaskArguments, { e
     balanceGettersLogic: "",
     baseURILogic: "",
     badgeMintLogic: "",
-    burnLogic: "",
+    badgeBurnLogic: "",
   };
 
   // 3. Fill out the addresses of the additional extensions below

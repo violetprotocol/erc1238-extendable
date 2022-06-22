@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-interface IBurnLogic {
+interface IBadgeBurnLogic {
     /**
      * @dev Destroys `amount` of tokens with id `id` owned by `from` and
      * optionally deletes the associated URI if deleteURI is `true`.
