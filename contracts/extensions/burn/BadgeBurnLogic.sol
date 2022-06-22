@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/Extension.sol";
 import "./BurnBaseLogic.sol";
-import "./IBurnLogic.sol";
+import "./IBadgeBurnLogic.sol";
 import "../permission/IPermissionLogic.sol";
 import "../hooks/generic/IBeforeBurnLogic.sol";
 import "../URI/ITokenURISetLogic.sol";
@@ -12,9 +12,9 @@ import "../URI/ITokenURISetLogic.sol";
  * @dev Extension to handle burning tokens which inherits BurnBaseLogic and adds custom logic around
  * permissions and the option to delete token URIs when burning.
  */
-contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
+contract BadgeBurnLogic is Extension, IBadgeBurnLogic, BurnBaseLogic {
     /**
-     * @dev See {IBurnLogic-burn}.
+     * @dev See {IBadgeBurnLogic-burn}.
      */
     function burn(
         address from,
@@ -33,7 +33,7 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
     }
 
     /**
-     * @dev See {IBurnLogic-burnBatch}.
+     * @dev See {IBadgeBurnLogic-burnBatch}.
      */
     function burnBatch(
         address from,
@@ -114,7 +114,7 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {
-        return (type(IBurnLogic).interfaceId);
+        return (type(IBadgeBurnLogic).interfaceId);
     }
 
     function getInterface() public pure virtual override returns (string memory) {

@@ -33,7 +33,7 @@ It uses `PermissionStorage`, `ERC1238Storage` and `ERC1238ApprovalStorage` durin
 
 `BadgeMintLogic`: Contains the logic to mint tokens and how they can be minted. It uses `ERC1238ApprovalStorage` and `ERC1238Storage`. It has a dependency to `PermissionLogic`, `TokenURISetLogic` and `BadgeBeforeMintLogic`.
 
-`BurnLogic`: Contains the logic to burn tokens and how they can be burnt. It uses `ERC1238Storage`. It has a dependency to `PermissionLogic`, `TokenURISetLogic` and `BeforeBurnLogic`.
+`BadgeBurnLogic`: Contains the logic to burn tokens and how they can be burnt. It uses `ERC1238Storage`. It has a dependency to `PermissionLogic`, `TokenURISetLogic` and `BeforeBurnLogic`.
 
 `BadgeBeforeMintLogic`: Contains custom logic for what happens before tokens are minted. It has a dependency to the `CollectionLogic`.
 
