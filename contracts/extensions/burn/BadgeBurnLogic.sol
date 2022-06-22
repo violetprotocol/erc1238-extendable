@@ -87,12 +87,27 @@ contract BadgeBurnLogic is Extension, IBadgeBurnLogic, BurnBaseLogic {
         uint256[] memory ids,
         uint256[] memory amounts
     ) private {
-        address burner = _lastExternalCaller();
+        require(from != address(0), "ERC1238: burn from the zero address");
+        require(ids.length == amounts.length, "ERC1238: ids and amounts length mismatch");
 
-        _burnBatch(burner, from, ids, amounts);
+        address burner = _lastExternalCaller();
+        IBeforeBurnLogic beforeBurnLogic = IBeforeBurnLogic(address(this));
+
+        ERC1238State storage erc1238State = ERC1238Storage._getState();
 
         for (uint256 i = 0; i < ids.length; i++) {
-            ITokenURISetLogic(address(this))._deleteTokenURI(ids[i]);
+            uint256 id = ids[i];
+            uint256 amount = amounts[i];
+
+            beforeBurnLogic._beforeBurn(burner, from, id, amount);
+
+            uint256 fromBalance = erc1238State._balances[id][from];
+            require(fromBalance >= amount, "ERC1238: burn amount exceeds balance");
+            unchecked {
+                erc1238State._balances[id][from] = fromBalance - amount;
+            }
+
+            ITokenURISetLogic(address(this))._deleteTokenURI(id);
         }
 
         emit BurnBatch(burner, from, ids, amounts);
