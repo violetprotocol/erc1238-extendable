@@ -59,9 +59,12 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
         uint8 v,
         bytes32 r,
         bytes32 s,
+        uint256 approvalExpiry,
         bytes memory data
     ) internal virtual {
-        bytes32 messageHash = _getMintApprovalMessageHash(to, id, amount);
+        require(approvalExpiry >= block.timestamp, "ERC1238: invalid approval expiry time");
+
+        bytes32 messageHash = _getMintApprovalMessageHash(to, id, amount, approvalExpiry);
 
         _verifyMintingApproval(to, messageHash, v, r, s);
 
@@ -109,9 +112,12 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
         uint8 v,
         bytes32 r,
         bytes32 s,
+        uint256 approvalExpiry,
         bytes memory data
     ) internal virtual {
-        bytes32 messageHash = _getMintBatchApprovalMessageHash(to, ids, amounts);
+        require(approvalExpiry >= block.timestamp, "ERC1238: invalid approval expiry time");
+
+        bytes32 messageHash = _getMintBatchApprovalMessageHash(to, ids, amounts, approvalExpiry);
         _verifyMintingApproval(to, messageHash, v, r, s);
 
         _mintBatch(to, ids, amounts, data);
