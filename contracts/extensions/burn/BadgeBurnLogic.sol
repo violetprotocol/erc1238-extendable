@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@violetprotocol/extendable/extensions/Extension.sol";
 import "./BurnBaseLogic.sol";
-import "./IBurnLogic.sol";
+import "./IBadgeBurnLogic.sol";
 import "../permission/IPermissionLogic.sol";
 import "../hooks/generic/IBeforeBurnLogic.sol";
 import "../URI/ITokenURISetLogic.sol";
@@ -12,9 +12,9 @@ import "../URI/ITokenURISetLogic.sol";
  * @dev Extension to handle burning tokens which inherits BurnBaseLogic and adds custom logic around
  * permissions and the option to delete token URIs when burning.
  */
-contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
+contract BadgeBurnLogic is Extension, IBadgeBurnLogic, BurnBaseLogic {
     /**
-     * @dev See {IBurnLogic-burn}.
+     * @dev See {IBadgeBurnLogic-burn}.
      */
     function burn(
         address from,
@@ -23,16 +23,17 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
         bool deleteURI
     ) public override {
         IPermissionLogic(address(this)).revertIfNotControllerOrAuthorized(from);
+        address burner = _lastExternalCaller();
 
         if (deleteURI) {
             _burnAndDeleteURI(from, id, amount);
         } else {
-            _burn(from, id, amount);
+            _burn(burner, from, id, amount);
         }
     }
 
     /**
-     * @dev See {IBurnLogic-burnBatch}.
+     * @dev See {IBadgeBurnLogic-burnBatch}.
      */
     function burnBatch(
         address from,
@@ -41,11 +42,12 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
         bool deleteURI
     ) public override {
         IPermissionLogic(address(this)).revertIfNotControllerOrAuthorized(from);
+        address burner = _lastExternalCaller();
 
         if (deleteURI) {
             _burnBatchAndDeleteURIs(from, ids, amounts);
         } else {
-            _burnBatch(from, ids, amounts);
+            _burnBatch(burner, from, ids, amounts);
         }
     }
 
@@ -63,7 +65,9 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
         uint256 id,
         uint256 amount
     ) private {
-        _burn(from, id, amount);
+        address burner = _lastExternalCaller();
+
+        _burn(burner, from, id, amount);
 
         ITokenURISetLogic(address(this))._deleteTokenURI(id);
     }
@@ -86,7 +90,7 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
         require(from != address(0), "ERC1238: burn from the zero address");
         require(ids.length == amounts.length, "ERC1238: ids and amounts length mismatch");
 
-        address burner = msg.sender;
+        address burner = _lastExternalCaller();
         IBeforeBurnLogic beforeBurnLogic = IBeforeBurnLogic(address(this));
 
         ERC1238State storage erc1238State = ERC1238Storage._getState();
@@ -110,7 +114,7 @@ contract BurnLogic is Extension, IBurnLogic, BurnBaseLogic {
     }
 
     function getInterfaceId() public pure virtual override returns (bytes4) {
-        return (type(IBurnLogic).interfaceId);
+        return (type(IBadgeBurnLogic).interfaceId);
     }
 
     function getInterface() public pure virtual override returns (string memory) {

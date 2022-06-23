@@ -69,7 +69,7 @@ contract PermissionLogic is Extension, IPermissionLogic {
         require(newRootController != address(0x0), "Invalid newRootController address");
 
         PermissionState storage permissionState = PermissionStorage._getState();
-        require(msg.sender == permissionState.rootController, "Unauthorized");
+        require(_lastExternalCaller() == permissionState.rootController, "Unauthorized");
 
         permissionState.rootController = newRootController;
 
@@ -80,10 +80,10 @@ contract PermissionLogic is Extension, IPermissionLogic {
      * @dev See {IPermissionLogic-setIntermediateController}.
      */
     function setIntermediateController(address newIntermediateController) external override {
-        require(newIntermediateController != address(0x0), "Invalid newRootController address");
+        require(newIntermediateController != address(0x0), "Invalid newIntermediateController address");
 
         PermissionState storage permissionState = PermissionStorage._getState();
-        require(msg.sender == permissionState.rootController, "Unauthorized");
+        require(_lastExternalCaller() == permissionState.rootController, "Unauthorized");
 
         permissionState.intermediateController = newIntermediateController;
 
@@ -94,10 +94,10 @@ contract PermissionLogic is Extension, IPermissionLogic {
      * @dev See {IPermissionLogic-setController}.
      */
     function setController(address newController) external override {
-        require(newController != address(0x0), "Invalid newRootController address");
+        require(newController != address(0x0), "Invalid newController address");
 
         PermissionState storage permissionState = PermissionStorage._getState();
-        require(msg.sender == permissionState.intermediateController, "Unauthorized");
+        require(_lastExternalCaller() == permissionState.intermediateController, "Unauthorized");
 
         permissionState.controller = newController;
 

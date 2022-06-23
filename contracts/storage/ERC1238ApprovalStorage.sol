@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 struct ERC1238ApprovalState {
     bytes32 domainTypeHash;
+    mapping(bytes32 => bool) hasApprovalHashBeenUsed;
 }
 
 library ERC1238ApprovalStorage {

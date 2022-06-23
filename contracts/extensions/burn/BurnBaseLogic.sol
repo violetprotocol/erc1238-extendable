@@ -21,13 +21,12 @@ contract BurnBaseLogic is IBurnBaseLogic {
      * Emits a {BurnSingle} event.
      */
     function _burn(
+        address burner,
         address from,
         uint256 id,
         uint256 amount
     ) internal virtual {
         require(from != address(0), "ERC1238: burn from the zero address");
-
-        address burner = msg.sender;
 
         IBeforeBurnLogic(address(this))._beforeBurn(burner, from, id, amount);
 
@@ -51,14 +50,13 @@ contract BurnBaseLogic is IBurnBaseLogic {
      * Emits a {BurnBatch} event.
      */
     function _burnBatch(
+        address burner,
         address from,
         uint256[] memory ids,
         uint256[] memory amounts
     ) internal virtual {
         require(from != address(0), "ERC1238: burn from the zero address");
         require(ids.length == amounts.length, "ERC1238: ids and amounts length mismatch");
-
-        address burner = msg.sender;
 
         IBeforeBurnLogic beforeBurnLogic = IBeforeBurnLogic(address(this));
 

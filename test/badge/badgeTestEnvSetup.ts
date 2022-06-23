@@ -7,9 +7,9 @@ import {
   BadgeBaseURILogic,
   BadgeBeforeBurnLogic,
   BadgeBeforeMintLogic,
+  BadgeBurnLogic,
   BadgeMintLogic,
   BalanceGettersLogic,
-  BurnLogic,
   CollectionLogic,
   ERC1238ReceiverMock,
   ExtendLogic,
@@ -24,7 +24,7 @@ export type BadgeBaseExtensions = {
   balanceGettersLogic: BalanceGettersLogic;
   baseURILogic: BadgeBaseURILogic;
   badgeMintLogic: BadgeMintLogic;
-  burnLogic: BurnLogic;
+  badgeBurnLogic: BadgeBurnLogic;
 };
 
 export type BadgeAdditionalExtensions = {
@@ -65,7 +65,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
   const beforeMintLogic = <BadgeBeforeMintLogic>await getDeployedContractFromArtifact("BadgeBeforeMintLogic");
   const badgeMintLogic = <BadgeMintLogic>await getDeployedContractFromArtifact("BadgeMintLogic");
   const beforeBurnLogic = <BadgeBeforeBurnLogic>await getDeployedContractFromArtifact("BadgeBeforeBurnLogic");
-  const burnLogic = <BurnLogic>await getDeployedContractFromArtifact("BurnLogic");
+  const badgeBurnLogic = <BadgeBurnLogic>await getDeployedContractFromArtifact("BadgeBurnLogic");
   const tokenURIGetLogic = <TokenURIGetLogic>await getDeployedContractFromArtifact("TokenURIGetLogic");
   const tokenURISetLogic = <TokenURISetLogic>await getDeployedContractFromArtifact("TokenURISetLogic");
   const collectionLogic = <CollectionLogic>await getDeployedContractFromArtifact("CollectionLogic");
@@ -81,7 +81,7 @@ export const makeTestEnv = async (adminSigner: SignerWithAddress): Promise<TestE
       balanceGettersLogic,
       baseURILogic,
       badgeMintLogic,
-      burnLogic,
+      badgeBurnLogic,
     },
     additionalExtensions: {
       beforeMintLogic,

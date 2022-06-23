@@ -7,8 +7,8 @@ import type { Artifact } from "hardhat/types";
 
 import {
   Badge,
+  BadgeBurnLogic,
   BadgeMintLogic,
-  BurnLogic,
   ERC1238ReceiverMock,
   IBalanceGettersLogic,
   ICollectionLogic,
@@ -16,6 +16,8 @@ import {
 } from "../../src/types";
 import { getMintApprovalSignature, getMintBatchApprovalSignature } from "../../src/utils/ERC1238Approval";
 import { BadgeAdditionalExtensions, BadgeBaseExtensions, baseURI, chainId, makeTestEnv } from "./badgeTestEnvSetup";
+
+const EXPIRY_TIME_OFFSET = 500;
 
 describe("Badge - Collection", function () {
   let admin: SignerWithAddress;
@@ -28,9 +30,11 @@ describe("Badge - Collection", function () {
   let badge: Badge;
   let badgeIBalance: IBalanceGettersLogic;
   let badgeMint: BadgeMintLogic;
-  let badgeBurn: BurnLogic;
+  let badgeBurn: BadgeBurnLogic;
   let badgeCollectionLogic: ICollectionLogic;
   let badgeIPermissionLogic: IPermissionLogic;
+
+  let approvalExpiry: BigNumber;
 
   before(async function () {
     const signers = await ethers.getSigners();
@@ -59,7 +63,7 @@ describe("Badge - Collection", function () {
 
     badgeIBalance = await ethers.getContractAt("IBalanceGettersLogic", badge.address);
     badgeMint = <BadgeMintLogic>await ethers.getContractAt("BadgeMintLogic", badge.address);
-    badgeBurn = <BurnLogic>await ethers.getContractAt("BurnLogic", badge.address);
+    badgeBurn = <BadgeBurnLogic>await ethers.getContractAt("BadgeBurnLogic", badge.address);
     badgeCollectionLogic = <ICollectionLogic>await ethers.getContractAt("ICollectionLogic", badge.address);
     badgeIPermissionLogic = <IPermissionLogic>await ethers.getContractAt("IPermissionLogic", badge.address);
 
@@ -193,15 +197,18 @@ describe("Badge - Collection", function () {
         let sigForNFT2: Signature;
 
         beforeEach(async () => {
-          nftId1 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_0);
+          approvalExpiry = BigNumber.from(Math.floor(Date.now() / 1000) + EXPIRY_TIME_OFFSET);
 
+          nftId1 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_0);
           nftId2 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_1);
+
           sigForNFT1 = await getMintApprovalSignature({
             signer: eoaRecipient1,
             erc1238ContractAddress: badge.address.toLowerCase(),
             chainId,
             id: nftId1,
             amount: NFT_AMOUNT,
+            approvalExpiry,
           });
 
           sigForNFT2 = await getMintApprovalSignature({
@@ -210,6 +217,7 @@ describe("Badge - Collection", function () {
             chainId,
             id: nftId2,
             amount: NFT_AMOUNT,
+            approvalExpiry,
           });
         });
 
@@ -221,6 +229,7 @@ describe("Badge - Collection", function () {
             sigForNFT1.v,
             sigForNFT1.r,
             sigForNFT1.s,
+            approvalExpiry,
             tokenURI,
             data,
           );
@@ -239,6 +248,7 @@ describe("Badge - Collection", function () {
             sigForNFT1.v,
             sigForNFT1.r,
             sigForNFT1.s,
+            approvalExpiry,
             tokenURI,
             data,
           );
@@ -249,6 +259,7 @@ describe("Badge - Collection", function () {
             sigForNFT2.v,
             sigForNFT2.r,
             sigForNFT2.s,
+            approvalExpiry,
             tokenURI,
             data,
           );
@@ -271,15 +282,18 @@ describe("Badge - Collection", function () {
         let sigForFT2: Signature;
 
         beforeEach(async () => {
-          ftId1 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_0);
+          approvalExpiry = BigNumber.from(Math.floor(Date.now() / 1000) + EXPIRY_TIME_OFFSET);
 
+          ftId1 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_0);
           ftId2 = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter_1);
+
           sigForFT1 = await getMintApprovalSignature({
             signer: eoaRecipient1,
             erc1238ContractAddress: badge.address,
             chainId,
             id: ftId1,
             amount: FT_AMOUNT_1,
+            approvalExpiry,
           });
 
           sigForFT2 = await getMintApprovalSignature({
@@ -288,6 +302,7 @@ describe("Badge - Collection", function () {
             chainId,
             id: ftId2,
             amount: FT_AMOUNT_2,
+            approvalExpiry,
           });
         });
         it("should credit the right balance of tokens from a base id", async () => {
@@ -298,6 +313,7 @@ describe("Badge - Collection", function () {
             sigForFT1.v,
             sigForFT1.r,
             sigForFT1.s,
+            approvalExpiry,
             tokenURI,
             data,
           );
@@ -316,6 +332,7 @@ describe("Badge - Collection", function () {
             sigForFT1.v,
             sigForFT1.r,
             sigForFT1.s,
+            approvalExpiry,
             tokenURI,
             data,
           );
@@ -326,6 +343,7 @@ describe("Badge - Collection", function () {
             sigForFT2.v,
             sigForFT2.r,
             sigForFT2.s,
+            approvalExpiry,
             tokenURI,
             data,
           );
@@ -370,9 +388,14 @@ describe("Badge - Collection", function () {
 
       describe("To a contract", () => {
         it("should credit the right base ids", async () => {
-          await badgeMint
-            .connect(admin)
-            .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+          const batch = {
+            to: contractRecipient1.address,
+            ids: tokenBatchIds,
+            amounts: mintBatchAmounts,
+            data,
+          };
+
+          await badgeMint.connect(admin).mintBatchToContract(batch, tokenBatchURIs);
 
           const balanceOfBaseId1 = await badgeCollectionLogic.callStatic.balanceFromBaseId(
             contractRecipient1.address,
@@ -394,19 +417,26 @@ describe("Badge - Collection", function () {
         let s: string;
 
         beforeEach(async () => {
+          approvalExpiry = BigNumber.from(Math.floor(Date.now() / 1000) + EXPIRY_TIME_OFFSET);
+
           ({ v, r, s } = await getMintBatchApprovalSignature({
             signer: eoaRecipient1,
             erc1238ContractAddress: badgeMint.address,
             chainId,
             ids: tokenBatchIds,
             amounts: mintBatchAmounts,
+            approvalExpiry,
           }));
         });
 
         it("should credit the right base ids", async () => {
-          await badgeMint
-            .connect(admin)
-            .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
+          const batch = {
+            to: eoaRecipient1.address,
+            ids: tokenBatchIds,
+            amounts: mintBatchAmounts,
+            data,
+          };
+          await badgeMint.connect(admin).mintBatchToEOA(batch, { v, r, s, approvalExpiry }, tokenBatchURIs);
 
           const balanceOfBaseId1 = await badgeCollectionLogic.callStatic.balanceFromBaseId(
             eoaRecipient1.address,
@@ -468,15 +498,28 @@ describe("Badge - Collection", function () {
             const burnAmount = toBn("25");
 
             const tokenId = await badgeCollectionLogic.getConstructedTokenID(baseId, eoaRecipient1.address, counter);
+            const approvalExpiry = BigNumber.from(Math.floor(Date.now() / 1000) + EXPIRY_TIME_OFFSET);
+
             const { v, r, s } = await getMintApprovalSignature({
               signer: eoaRecipient1,
               erc1238ContractAddress: badge.address.toLowerCase(),
               chainId,
               id: tokenId,
               amount: mintAmount,
+              approvalExpiry,
             });
 
-            await badgeMint.mintToEOA(eoaRecipient1.address, tokenId, mintAmount, v, r, s, tokenURI, data);
+            await badgeMint.mintToEOA(
+              eoaRecipient1.address,
+              tokenId,
+              mintAmount,
+              v,
+              r,
+              s,
+              approvalExpiry,
+              tokenURI,
+              data,
+            );
 
             await badgeBurn.burn(eoaRecipient1.address, tokenId, burnAmount, deleteURI);
 
@@ -524,9 +567,14 @@ describe("Badge - Collection", function () {
           });
 
           it("should properly decrease the baseId balances", async () => {
-            await badgeMint
-              .connect(admin)
-              .mintBatchToContract(contractRecipient1.address, tokenBatchIds, mintBatchAmounts, tokenBatchURIs, data);
+            const batch = {
+              to: contractRecipient1.address,
+              ids: tokenBatchIds,
+              amounts: mintBatchAmounts,
+              data,
+            };
+
+            await badgeMint.connect(admin).mintBatchToContract(batch, tokenBatchURIs);
 
             await badgeBurn
               .connect(admin)
@@ -580,17 +628,27 @@ describe("Badge - Collection", function () {
           });
 
           it("should properly decrease the baseId balances", async () => {
-            const { v, r, s } = await getMintBatchApprovalSignature({
+            const approvalExpiry = BigNumber.from(Math.floor(Date.now() / 1000) + EXPIRY_TIME_OFFSET);
+
+            const signature = await getMintBatchApprovalSignature({
               signer: eoaRecipient1,
               erc1238ContractAddress: badgeMint.address,
               chainId,
               ids: tokenBatchIds,
               amounts: mintBatchAmounts,
+              approvalExpiry,
             });
 
-            await badgeMint
-              .connect(admin)
-              .mintBatchToEOA(eoaRecipient1.address, tokenBatchIds, mintBatchAmounts, v, r, s, tokenBatchURIs, data);
+            await badgeMint.connect(admin).mintBatchToEOA(
+              {
+                to: eoaRecipient1.address,
+                ids: tokenBatchIds,
+                amounts: mintBatchAmounts,
+                data,
+              },
+              signature,
+              tokenBatchURIs,
+            );
 
             await badgeBurn.connect(admin).burnBatch(eoaRecipient1.address, tokenBatchIds, burnBatchAmounts, deleteURI);
 
