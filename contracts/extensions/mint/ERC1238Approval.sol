@@ -153,7 +153,19 @@ contract ERC1238Approval {
 
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", erc1238ApprovalState.domainTypeHash, mintApprovalHash));
 
-        require(ecrecover(digest, v, r, s) == recipient, "ERC1238: Approval verification failed");
+        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+            revert("ERC1238: invalid signature s");
+        }
+        if (v != 27 && v != 28) {
+            revert("ERC1238: invalid signature v");
+        }
+
+        address signer = ecrecover(digest, v, r, s);
+        if (signer == address(0)) {
+            revert("ERC1238: invalid signature");
+        }
+
+        require(signer == recipient, "ERC1238: Approval verification failed");
 
         erc1238ApprovalState.hasApprovalHashBeenUsed[mintApprovalHash] = true;
     }
