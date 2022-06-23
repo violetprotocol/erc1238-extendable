@@ -21,7 +21,7 @@ contract BadgeCallerMock {
         return ITokenURIGetLogic(badge).tokenURI(id);
     }
 
-    function uri(uint256 id) public view returns (string memory) {
+    function uri(uint256 id) public returns (string memory) {
         return IERC1155MetadataURI(badge).uri(id);
     }
 }
