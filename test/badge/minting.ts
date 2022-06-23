@@ -115,14 +115,14 @@ describe("Badge - Minting", function () {
         ).to.be.revertedWith("ERC1238: Approval verification failed");
       });
 
-      // TO-DO properly test ecrecover to address(0x0)?
-      // it("should revert with an invalid signature", async () => {
-      //   await expect(
-      //     badgeMint
-      //       .connect(admin)
-      //       .mintToEOA(ethers.constants.AddressZero, tokenId, mintAmount, v, r, s, tokenURI, data),
-      //   ).to.be.revertedWith("ERC1238: invalid signature");
-      // });
+      it("should revert with an invalid signature", async () => {
+        const bytes32Zero = "0x0000000000000000000000000000000000000000000000000000000000000000"
+        await expect(
+          badgeMint
+            .connect(admin)
+            .mintToEOA(ethers.constants.AddressZero, tokenId, mintAmount, 27, bytes32Zero, bytes32Zero, tokenURI, data),
+        ).to.be.revertedWith("ERC1238: invalid signature");
+      });
 
       it("should revert if minter is not authorized", async () => {
         await expect(
