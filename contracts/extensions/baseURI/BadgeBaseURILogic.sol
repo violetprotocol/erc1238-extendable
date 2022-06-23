@@ -23,7 +23,7 @@ contract BadgeBaseURILogic is InternalExtension, BaseURILogic, IBadgeBaseURILogi
     /**
      * @dev See {IBadgeBaseURILogic-baseURI}.
      */
-    function baseURI() public override(BaseURILogic, IBadgeBaseURILogic) returns (string memory) {
+    function baseURI() public override(BaseURILogic, IBadgeBaseURILogic) view returns (string memory) {
         return super.baseURI();
     }
 

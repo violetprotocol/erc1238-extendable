@@ -12,7 +12,7 @@ contract BaseURILogic is IBaseURILogic {
     /**
      * @dev See {IBaseURILogic-baseURI}.
      */
-    function baseURI() public virtual override returns (string memory) {
+    function baseURI() public virtual override view returns (string memory) {
         ERC1238State storage erc1238State = ERC1238Storage._getState();
         string memory base = erc1238State.baseURI;
 

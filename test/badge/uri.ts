@@ -120,8 +120,7 @@ describe("Badge - URIs", function () {
     });
 
     it("should return a token URI with the ERC155Metadata interface", async () => {
-      console.log(await badgeIERC1155MetadataURI.callStatic.uri(tokenId));
-      expect(await badgeIERC1155MetadataURI.uri(tokenId)).to.eq(tokenURI);
+      expect(await badgeIERC1155MetadataURI.callStatic.uri(tokenId)).to.eq(tokenURI);
     });
 
     it("should return a token URI via a contract", async () => {

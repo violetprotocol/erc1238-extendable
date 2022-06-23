@@ -10,5 +10,5 @@ interface IBaseURILogic {
      * Clients calling this function must replace the `\{id\}` substring with the
      * actual token type ID.
      */
-    function baseURI() external returns (string memory);
+    function baseURI() external view returns (string memory);
 }
