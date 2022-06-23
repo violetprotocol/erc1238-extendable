@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import { ERC1238ApprovalState, ERC1238ApprovalStorage } from "../../storage/ERC1238ApprovalStorage.sol";
-import "hardhat/console.sol";
 
 struct EIP712Domain {
     string name;
@@ -167,7 +166,7 @@ contract ERC1238Approval {
         }
 
         require(signer == recipient, "ERC1238: Approval verification failed");
-        
+
         erc1238ApprovalState.hasApprovalHashBeenUsed[mintApprovalHash] = true;
     }
 }
