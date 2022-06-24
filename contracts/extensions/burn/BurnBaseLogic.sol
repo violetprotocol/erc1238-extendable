@@ -62,8 +62,7 @@ contract BurnBaseLogic is IBurnBaseLogic {
 
         ERC1238State storage erc1238State = ERC1238Storage._getState();
 
-        uint256 idsLength = ids.length;
-        for (uint256 i = 0; i < idsLength; i++) {
+        for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
 

@@ -52,8 +52,7 @@ contract TokenURISetLogic is InternalExtension, ITokenURISetLogic {
 
         ERC1238URIState storage erc1238URIState = ERC1238URIStorage._getState();
 
-        uint256 idsLength = ids.length;
-        for (uint256 i = 0; i < idsLength; i++) {
+        for (uint256 i = 0; i < ids.length; i++) {
             string memory uri = tokenURIs[i];
             if (bytes(uri).length == 0) continue;
 
