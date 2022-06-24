@@ -146,7 +146,6 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
         uint256 amount,
         bytes memory data
     ) private {
-
         IBeforeMintLogic(address(this))._beforeMint(minter, to, id, amount, data);
         ERC1238State storage erc1238State = ERC1238Storage._getState();
 
@@ -175,7 +174,8 @@ contract MintBaseLogic is ERC1238Approval, IMintBaseLogic {
 
         ERC1238State storage erc1238State = ERC1238Storage._getState();
 
-        for (uint256 i = 0; i < ids.length; i++) {
+        uint256 idsLength = ids.length;
+        for (uint256 i = 0; i < idsLength; i++) {
             IBeforeMintLogic(address(this))._beforeMint(minter, to, ids[i], amounts[i], data);
 
             erc1238State._balances[ids[i]][to] += amounts[i];
