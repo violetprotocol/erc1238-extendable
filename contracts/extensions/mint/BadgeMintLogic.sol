@@ -112,10 +112,10 @@ contract BadgeMintLogic is Extension, IBadgeMintLogic, MintBaseLogic {
             ITokenURISetLogic(address(this))._setBatchTokenURI(batch.ids, uris[i]);
 
             if (batch.to.isContract()) {
-                _mintBatchToContract(msg.sender, batch.to, batch.ids, batch.amounts, batch.data);
+                _mintBatchToContract(_lastExternalCaller(), batch.to, batch.ids, batch.amounts, batch.data);
             } else {
                 _mintBatchToEOA(
-                    msg.sender,
+                    _lastExternalCaller(),
                     batch.to,
                     batch.ids,
                     batch.amounts,
