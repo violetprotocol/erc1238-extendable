@@ -100,7 +100,6 @@ interface IBadgeMintLogic {
      * otherwise it will override any previously set value that id.
      *
      * Requirements:
-     * - MUST be called directly and not via another extension as it uses `msg.sender`
      * - `to` can be a combination of smart contract addresses and EOAs.
      * - If `to` is not a contract, an EIP712 signature from `to` as defined by ERC1238Approval
      * must be passed at the right index in `data`.
